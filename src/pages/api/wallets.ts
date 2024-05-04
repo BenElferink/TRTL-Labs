@@ -31,7 +31,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             const trtl = tokens?.find((t) => t.tokenId === TRTL_TOKEN_ID)
 
             // @ts-ignore
-            mapped[idx].tokenAmount = trtl?.tokenAmount || null
+            mapped[idx].tokenAmount = trtl?.tokenAmount?.onChain || 0
           }
         }
 
