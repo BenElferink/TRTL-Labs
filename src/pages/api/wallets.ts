@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { firestore } from '@/utils/firebase'
 import badLabsApi from '@/utils/badLabsApi'
+import { TRTL_TOKEN_ID } from '@/constants'
 
 export const config = {
   maxDuration: 300,
@@ -8,8 +9,6 @@ export const config = {
     responseLimit: false,
   },
 }
-
-const TRTL_TOKEN_ID = '52162581184a457fad70470161179c5766f00237d4b67e0f1df1b4e65452544c'
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const { method, query, body } = req
