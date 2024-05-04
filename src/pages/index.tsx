@@ -1,21 +1,21 @@
-// import { useEffect, useState } from 'react'
-// import { useWallet as useCardanoWallet } from '@meshsdk/react'
-// import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
-// import ConnectWallets from '@/components/ConnectWallets'
+import { useEffect, useState } from 'react'
+import { useWallet as useCardanoWallet } from '@meshsdk/react'
+import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
+import ConnectWallets from '@/components/ConnectWallets'
 import Url from '@/components/Url'
 
 const Page = () => {
-  // const cardano = useCardanoWallet()
-  // const solana = useSolanaWallet()
+  const cardano = useCardanoWallet()
+  const solana = useSolanaWallet()
 
-  // const [ready, setReady] = useState(false)
+  const [ready, setReady] = useState(false)
 
-  // useEffect(() => {
-  //   cardano.disconnect()
-  //   solana.disconnect().then(() => {
-  //     setReady(true)
-  //   })
-  // }, [])
+  useEffect(() => {
+    cardano.disconnect()
+    solana.disconnect().then(() => {
+      setReady(true)
+    })
+  }, [])
 
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-between'>
@@ -24,8 +24,7 @@ const Page = () => {
         <p>Connect your wallets for cross-chain airdrops!</p>
       </header>
 
-      {/* <ConnectWallets ready={ready} /> */}
-      <div>placeholder</div>
+      <ConnectWallets ready={ready} />
 
       <footer className='p-4 text-center'>
         <h6 className='text-sm'>
