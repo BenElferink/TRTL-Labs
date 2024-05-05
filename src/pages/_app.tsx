@@ -24,7 +24,7 @@ const App = ({ Component, pageProps }: AppProps) => {
         <title>TRTL | Wallet Connect</title>
       </Head>
 
-      <Toaster position='bottom-right' />
+      <Toaster position='top-right' />
 
       <main className='w-screen min-h-screen bg-black/30'>
         <MeshProvider>

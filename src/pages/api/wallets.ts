@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { firestore } from '@/utils/firebase'
+import { firebase, firestore } from '@/utils/firebase'
 import badLabsApi from '@/utils/badLabsApi'
 import { TRTL_TOKEN_ID } from '@/constants'
 
@@ -42,7 +42,29 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
 
       case 'POST': {
+        const { id } = query
         const { cardano, solana } = body
+
+        if (!!id) {
+          const docId = id as string
+          const doc = await collection.doc(docId).get()
+
+          if (!doc.exists) {
+            return res.status(400).end('Bad ID')
+          }
+
+          const updateParams: firebase.firestore.UpdateData = {}
+
+          if (cardano) updateParams['cardano'] = cardano
+          if (solana) updateParams['solana'] = solana
+
+          await collection.doc(docId).update(updateParams)
+
+          return res.status(201).json({
+            count: 1,
+            items: [doc.id],
+          })
+        }
 
         const { docs } = await collection.where('cardano', '==', cardano).where('solana', '==', solana).get()
 

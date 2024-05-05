@@ -13,32 +13,37 @@ import Button from '@/components/Button'
 import Loader from '@/components/Loader'
 import CardanoWalletModal from '@/components/CardanoWalletModal'
 
-const ConnectWallets = (props: { ready: boolean }) => {
-  const { ready } = props
+const ConnectWallets = (props: { ready: boolean; docId: string; cardanoAddress: string; solanaAddress: string }) => {
+  const { ready, docId, cardanoAddress, solanaAddress } = props
 
   const cardano = useCardanoWallet()
   const solana = useSolanaWallet()
 
+  const [done, setDone] = useState(!!cardanoAddress && !!solanaAddress)
+  const [submitted, setSubmitted] = useState({ docId, cardano: cardanoAddress, solana: solanaAddress })
   const [openCardanoModal, setOpenCardanoModal] = useState(false)
-  const [done, setDone] = useState(false)
-  const [submitted, setSubmitted] = useState({ cardano: '', solana: '' })
 
-  const saveWallets = async (c: typeof cardano, s: typeof solana) => {
-    const toastId = toast.loading('Linking wallets...', { duration: 1000 * 300 })
+  const saveWallets = async () => {
+    let cAddy = cardanoAddress || ''
 
-    const cUsedAddresses = await c.wallet.getUsedAddresses()
-    let cAddy = ''
+    if (!cAddy && cardano.connected) {
+      const cUsedAddresses = await cardano.wallet.getUsedAddresses()
 
-    if (cUsedAddresses.length) {
-      cAddy = cUsedAddresses[0]
-    } else {
-      cAddy = await c.wallet.getChangeAddress()
+      if (cUsedAddresses.length) {
+        cAddy = cUsedAddresses[0]
+      } else {
+        cAddy = await cardano.wallet.getChangeAddress()
+      }
     }
 
-    let sAddy = s.publicKey?.toBase58()
+    let sAddy = solanaAddress || ''
 
-    if (!sAddy) {
-      sAddy = s.wallet?.adapter.publicKey?.toBase58() || 'ERROR: s.wallet?.adapter.publicKey?.toBase58()'
+    if (!sAddy && solana.connected) {
+      sAddy = solana.publicKey?.toBase58() || ''
+
+      if (!sAddy) {
+        sAddy = solana.wallet?.adapter.publicKey?.toBase58() || ''
+      }
     }
 
     const payload = {
@@ -46,17 +51,26 @@ const ConnectWallets = (props: { ready: boolean }) => {
       solana: sAddy,
     }
 
-    try {
-      await axios.post('/api/wallets', payload)
+    const hasAllWallets = !!payload.cardano && !!payload.solana
+    const toastId = hasAllWallets ? toast.loading('Linking wallets...', { duration: 1000 * 300 }) : ''
 
-      setDone(true)
+    try {
+      const { data } = await axios.post(`/api/wallets?id=${submitted.docId}`, payload)
+
+      // @ts-ignore
+      payload.docId = data.items[0]
+      // @ts-ignore
       setSubmitted(payload)
 
-      toast.dismiss(toastId)
-      toast.success('Successfully linked wallets', { duration: 1000 * 7 })
+      if (hasAllWallets) {
+        toast.dismiss(toastId)
+        toast.success('Successfully linked wallets', { duration: 1000 * 7 })
 
-      await cardano.disconnect()
-      await solana.disconnect()
+        setDone(true)
+
+        cardano.disconnect()
+        await solana.disconnect()
+      }
     } catch (error: any) {
       console.error(error?.message || error)
 
@@ -66,12 +80,8 @@ const ConnectWallets = (props: { ready: boolean }) => {
   }
 
   useEffect(() => {
-    if (ready && cardano.connected && solana.connected) saveWallets(cardano, solana)
-  }, [ready, cardano.connected, solana.connected])
-
-  if (ready && cardano.connected && solana.connected) {
-    return <Loader />
-  }
+    if (ready && !done && (cardano.connected || solana.connected)) saveWallets()
+  }, [ready, done, cardano.connected, solana.connected])
 
   if (done) {
     return (
@@ -91,46 +101,62 @@ const ConnectWallets = (props: { ready: boolean }) => {
   }
 
   return (
-    <div className='flex flex-col sm:flex-row items-center justify-center'>
-      <div className='m-2'>
-        {!ready || cardano.connecting ? (
-          <Loader />
-        ) : cardano.connected ? (
-          <div className='flex flex-col items-center justify-center'>
-            <CheckBadgeIcon className='w-24 h-24 text-green-400' />
-            <span>Cardano</span>
-          </div>
-        ) : (
-          <Fragment>
-            <Button label='Cardano' onClick={() => setOpenCardanoModal(true)} />
-            <CardanoWalletModal isOpen={openCardanoModal} onClose={() => setOpenCardanoModal(false)} />
-          </Fragment>
-        )}
-      </div>
-
-      <div className='m-2'>
-        <ArrowsRightLeftIcon className='w-12 h-12 hidden sm:block' />
-        <ArrowsUpDownIcon className='w-12 h-12 block sm:hidden' />
-      </div>
-
-      <div className='m-2'>
-        {!ready || solana.connecting ? (
-          <Loader />
-        ) : solana.connected ? (
-          <div className='flex flex-col items-center justify-center'>
-            <CheckBadgeIcon className='w-24 h-24 text-green-400' />
-            <span>Solana</span>
-          </div>
-        ) : (
-          <Button>
-            <div className='relative'>
-              <span className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>Solana</span>
-              <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] z-10 flex items-center justify-center'>
-                <SolanaWalletMultiButton style={{ width: '165px', height: '75px', opacity: 0 }} />
-              </div>
+    <div className='flex flex-col'>
+      <div className='flex flex-col sm:flex-row items-center justify-center'>
+        <div className='m-2'>
+          {!ready || cardano.connecting ? (
+            <Loader />
+          ) : cardano.connected || !!cardanoAddress ? (
+            <div className='flex flex-col items-center justify-center'>
+              <CheckBadgeIcon className='w-24 h-24 text-green-400' />
+              <span>Cardano</span>
             </div>
-          </Button>
-        )}
+          ) : (
+            <Fragment>
+              <Button label='Cardano' onClick={() => setOpenCardanoModal(true)} />
+              <CardanoWalletModal isOpen={openCardanoModal} onClose={() => setOpenCardanoModal(false)} />
+            </Fragment>
+          )}
+        </div>
+
+        <div className='m-2'>
+          <ArrowsRightLeftIcon className='w-12 h-12 hidden sm:block' />
+          <ArrowsUpDownIcon className='w-12 h-12 block sm:hidden' />
+        </div>
+
+        <div className='m-2'>
+          {!ready || solana.connecting ? (
+            <Loader />
+          ) : solana.connected || !!solanaAddress ? (
+            <div className='flex flex-col items-center justify-center'>
+              <CheckBadgeIcon className='w-24 h-24 text-green-400' />
+              <span>Solana</span>
+            </div>
+          ) : (
+            <Button>
+              <div className='relative'>
+                <span className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0'>Solana</span>
+                <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] z-10 flex items-center justify-center'>
+                  <SolanaWalletMultiButton style={{ width: '165px', height: '75px', opacity: 0 }} />
+                </div>
+              </div>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className='inline-flex sm:hidden'>
+        {ready && (cardano.connected || !!cardanoAddress || solana.connected || !!solanaAddress) ? (
+          <Button
+            label='Copy Link'
+            onClick={() => {
+              navigator.clipboard.writeText(`https://trtl-wallet-connect.vercel.app/?id=${submitted.docId}`)
+
+              toast.success('Successfully Copied', { duration: 10000 })
+              toast.loading('Now paste the link in your other wallet', { duration: 10000 })
+            }}
+          />
+        ) : null}
       </div>
     </div>
   )

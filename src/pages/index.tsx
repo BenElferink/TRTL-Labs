@@ -1,10 +1,30 @@
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { useEffect, useState } from 'react'
 import { useWallet as useCardanoWallet } from '@meshsdk/react'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
-import ConnectWallets from '@/components/ConnectWallets'
+import { firestore } from '@/utils/firebase'
 import Url from '@/components/Url'
+import ConnectWallets from '@/components/ConnectWallets'
+import { DBPayload } from '@/@types'
 
-const Page = () => {
+export const getServerSideProps = (async ({ query }) => {
+  const id = (query.id || '') as string
+
+  if (!!id) {
+    const collection = firestore.collection('turtle-syndicate-wallets')
+    const doc = await collection.doc(id).get()
+
+    if (doc.exists) {
+      return { props: { ...(doc.data() as DBPayload), docId: id } }
+    }
+  }
+
+  return { props: { docId: id, cardano: '', solana: '' } }
+}) satisfies GetServerSideProps<DBPayload & { docId: string }>
+
+export type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>
+
+const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PageProps) => {
   const cardano = useCardanoWallet()
   const solana = useSolanaWallet()
 
@@ -24,7 +44,7 @@ const Page = () => {
         <p>Connect your wallets for cross-chain airdrops!</p>
       </header>
 
-      <ConnectWallets ready={ready} />
+      <ConnectWallets ready={ready} docId={docId} cardanoAddress={cardanoAddress} solanaAddress={solanaAddress} />
 
       <footer className='p-4 text-center'>
         <h6 className='text-sm'>
