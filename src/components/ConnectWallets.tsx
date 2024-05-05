@@ -145,8 +145,8 @@ const ConnectWallets = (props: { ready: boolean; docId: string; cardanoAddress: 
         </div>
       </div>
 
-      <div className='inline-flex sm:hidden'>
-        {ready && (cardano.connected || !!cardanoAddress || solana.connected || !!solanaAddress) ? (
+      {ready && (cardano.connected || solana.connected) ? (
+        <div className='w-full mt-4 flex items-center justify-center sm:hidden'>
           <Button
             label='Copy Link'
             onClick={() => {
@@ -156,8 +156,8 @@ const ConnectWallets = (props: { ready: boolean; docId: string; cardanoAddress: 
               toast.loading('Now paste the link in your other wallet', { duration: 10000 })
             }}
           />
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </div>
   )
 }
