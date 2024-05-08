@@ -1,3 +1,3 @@
-# TRTL - Wallet Connect App
+# TRTL - Solana Bridge
 
 - [App](https://trtl-wallet-connect.vercel.app/)
