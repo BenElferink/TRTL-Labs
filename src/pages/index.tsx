@@ -6,6 +6,7 @@ import { firestore } from '@/utils/firebase'
 import Url from '@/components/Url'
 import ConnectWallets from '@/components/ConnectWallets'
 import { DBPayload } from '@/@types'
+import Button from '@/components/Button'
 
 export const getServerSideProps = (async ({ query }) => {
   const id = (query.id || '') as string
@@ -29,22 +30,32 @@ const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PagePro
   const solana = useSolanaWallet()
 
   const [ready, setReady] = useState(false)
+  const [done, setDone] = useState(!!cardanoAddress && !!solanaAddress)
 
   useEffect(() => {
-    cardano.disconnect()
-    solana.disconnect().then(() => {
-      setReady(true)
-    })
+    // cardano.disconnect()
+    // solana.disconnect().then(() => {
+    setReady(true)
+    // })
   }, [])
 
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-between'>
       <header className='p-4 text-center'>
         <h1 className='text-3xl'>Tortol Token</h1>
-        <p>Connect your wallets for cross-chain airdrops!</p>
+        <p>Connect your wallets and go cross-chain!</p>
       </header>
 
-      <ConnectWallets ready={ready} docId={docId} cardanoAddress={cardanoAddress} solanaAddress={solanaAddress} />
+      <main>
+        <ConnectWallets ready={ready} done={done} setDone={setDone} docId={docId} cardanoAddress={cardanoAddress} solanaAddress={solanaAddress} />
+
+        {done ? (
+          <div className='flex'>
+            <Button label='Bridge to Solana' disabled onClick={() => alert('in development')} />
+            <Button label='Bridge to Cardano' disabled onClick={() => alert('in development')} />
+          </div>
+        ) : null}
+      </main>
 
       <footer className='p-4 text-center'>
         <h6 className='text-sm'>
