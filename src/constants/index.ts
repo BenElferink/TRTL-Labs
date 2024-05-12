@@ -1,8 +1,11 @@
 export const ADA_TOKEN_ID = '52162581184a457fad70470161179c5766f00237d4b67e0f1df1b4e65452544c'
-export const SOL_TOKEN_ID = ''
 
+export const SOL_TOKEN_ID = '9TMuCmQqMBaW8JRPGJEAuetJt94JVruuKVY8r8HvtYKd'
 export const SOL_TOKEN_DECIMALS = 6
 
+export const SOL_NET = 'mainnet-beta'
+
+// app wallet: ChCJv4P16YDBCVaM8eoLTaP7MMLE7ooMD5YbynBVtakZ
 export const SOL_APP_SECRET_KEY = (
   Array.isArray(process.env.SOL_APP_SECRET_KEY) ? process.env.SOL_APP_SECRET_KEY : process.env.SOL_APP_SECRET_KEY?.split(',') || []
 ).map((n) => Number(n))

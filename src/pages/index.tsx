@@ -1,12 +1,11 @@
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { useEffect, useState } from 'react'
-import { useWallet as useCardanoWallet } from '@meshsdk/react'
-import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { firestore } from '@/utils/firebase'
 import Url from '@/components/Url'
-import ConnectWallets from '@/components/ConnectWallets'
-import { DBPayload } from '@/@types'
 import Button from '@/components/Button'
+import ConnectWallets from '@/components/ConnectWallets'
+import BridgeToSolanaModal from '@/components/BridgeToSolanaModal'
+import type { DBPayload } from '@/@types'
 
 export const getServerSideProps = (async ({ query }) => {
   const id = (query.id || '') as string
@@ -26,18 +25,15 @@ export const getServerSideProps = (async ({ query }) => {
 export type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>
 
 const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PageProps) => {
-  const cardano = useCardanoWallet()
-  const solana = useSolanaWallet()
+  const [submitted, setSubmitted] = useState({ id: docId, cardano: cardanoAddress, solana: solanaAddress })
 
   const [ready, setReady] = useState(false)
   const [done, setDone] = useState(!!cardanoAddress && !!solanaAddress)
 
-  useEffect(() => {
-    // cardano.disconnect()
-    // solana.disconnect().then(() => {
-    setReady(true)
-    // })
-  }, [])
+  useEffect(() => setReady(true), [])
+
+  const [openSolanaBridge, setOpenSolanaBridge] = useState(false)
+  const [openCardanoBridge, setOpenCardanoBridge] = useState(false)
 
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-between'>
@@ -47,12 +43,14 @@ const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PagePro
       </header>
 
       <main>
-        <ConnectWallets ready={ready} done={done} setDone={setDone} docId={docId} cardanoAddress={cardanoAddress} solanaAddress={solanaAddress} />
+        <ConnectWallets ready={ready} done={done} setDone={setDone} submitted={submitted} setSubmitted={setSubmitted} />
 
         {done ? (
           <div className='flex'>
-            <Button label='Bridge to Solana' disabled onClick={() => alert('in development')} />
-            <Button label='Bridge to Cardano' disabled onClick={() => alert('in development')} />
+            <Button label='Bridge to Solana' disabled onClick={() => setOpenSolanaBridge(true)} />
+            <Button label='Bridge to Cardano' disabled onClick={() => setOpenCardanoBridge(true)} />
+
+            <BridgeToSolanaModal isOpen={openSolanaBridge} onClose={() => setOpenSolanaBridge(false)} submitted={submitted} />
           </div>
         ) : null}
       </main>

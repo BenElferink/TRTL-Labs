@@ -7,33 +7,31 @@ import { useWallet as useCardanoWallet } from '@meshsdk/react'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton as SolanaWalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { ArrowsRightLeftIcon, ArrowsUpDownIcon, CheckBadgeIcon } from '@heroicons/react/24/solid'
-import truncateStringInMiddle from '@/functions/truncateStringInMiddle'
-import Url from '@/components/Url'
-import Button, { RedButton } from '@/components/Button'
 import Loader from '@/components/Loader'
+import WalletUrl from './WalletUrl'
+import Button, { RedButton } from '@/components/Button'
 import CardanoWalletModal from '@/components/CardanoWalletModal'
+import type { SubmittedPayload } from '@/@types'
 
 const ConnectWallets = (props: {
   ready: boolean
   done: boolean
   setDone: Dispatch<SetStateAction<boolean>>
-  docId: string
-  cardanoAddress: string
-  solanaAddress: string
+  submitted: SubmittedPayload
+  setSubmitted: Dispatch<SetStateAction<SubmittedPayload>>
 }) => {
-  const { ready, done, setDone, docId, cardanoAddress, solanaAddress } = props
+  const { ready, done, setDone, submitted, setSubmitted } = props
 
   const cardano = useCardanoWallet()
   const solana = useSolanaWallet()
 
-  const [submitted, setSubmitted] = useState({ id: docId, cardano: cardanoAddress, solana: solanaAddress })
   const [openCardanoModal, setOpenCardanoModal] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const saveWallets = async () => {
     setLoading(true)
 
-    let cAddy = cardanoAddress || ''
+    let cAddy = submitted.cardano || ''
 
     if (!cAddy && cardano.connected) {
       const cUsedAddresses = await cardano.wallet.getUsedAddresses()
@@ -45,7 +43,7 @@ const ConnectWallets = (props: {
       }
     }
 
-    let sAddy = solanaAddress || ''
+    let sAddy = submitted.solana || ''
 
     if (!sAddy && solana.connected) {
       sAddy = solana.publicKey?.toBase58() || ''
@@ -124,10 +122,10 @@ const ConnectWallets = (props: {
 
         <p className='mt-2 text-sm text-center'>
           <u className='mr-2'>Cardano:</u>
-          <Url src={`https://cardanoscan.io/address/${submitted.cardano}`} label={truncateStringInMiddle(submitted.cardano, 7)} />
+          <WalletUrl type='cardano' address={submitted.cardano} />
           <br />
           <u className='mr-2'>Solana:</u>
-          <Url src={`https://explorer.solana.com/address/${submitted.solana}`} label={truncateStringInMiddle(submitted.solana, 7)} />
+          <WalletUrl type='solana' address={submitted.solana} />
         </p>
 
         <div className='my-4'>
@@ -143,11 +141,11 @@ const ConnectWallets = (props: {
         <div>
           {!ready || cardano.connecting ? (
             <Loader />
-          ) : cardano.connected || !!cardanoAddress ? (
+          ) : cardano.connected || !!submitted.cardano ? (
             <div className='flex flex-col items-center justify-center'>
               <CheckBadgeIcon className='w-24 h-24 text-green-400' />
               <span>Cardano</span>
-              <Url src={`https://cardanoscan.io/address/${submitted.cardano}`} label={truncateStringInMiddle(submitted.cardano, 7)} />
+              <WalletUrl type='cardano' address={submitted.cardano} />
             </div>
           ) : (
             <Fragment>
@@ -165,11 +163,11 @@ const ConnectWallets = (props: {
         <div>
           {!ready || solana.connecting ? (
             <Loader />
-          ) : solana.connected || !!solanaAddress ? (
+          ) : solana.connected || !!submitted.solana ? (
             <div className='flex flex-col items-center justify-center'>
               <CheckBadgeIcon className='w-24 h-24 text-green-400' />
               <span>Solana</span>
-              <Url src={`https://explorer.solana.com/address/${submitted.solana}`} label={truncateStringInMiddle(submitted.solana, 7)} />
+              <WalletUrl type='solana' address={submitted.solana} />
             </div>
           ) : (
             <Button disabled={loading}>
