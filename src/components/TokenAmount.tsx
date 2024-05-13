@@ -1,12 +1,12 @@
 import Image from 'next/image'
-import { Dispatch, SetStateAction, useState } from 'react'
+import { useState } from 'react'
 import formatTokenAmount from '@/functions/formatTokenAmount'
 
 interface TokenAmountProps {
   balance: number
   decimals: number
   selectedAmount: number
-  setSelectedAmount: Dispatch<SetStateAction<number>>
+  setSelectedAmount: (selectedAmount: number) => void
 }
 
 const TokenAmount = (props: TokenAmountProps) => {
@@ -49,14 +49,9 @@ const TokenAmount = (props: TokenAmountProps) => {
 
   return (
     <div>
-      <h6 className='mb-2 text-xl text-center'>How many tokens?</h6>
-      <p className='mb-6 text-center text-sm text-zinc-400'>
-        Available:&nbsp;
-        <span className='text-zinc-200'>{formatTokenAmount.fromChain(balance, decimals).toLocaleString('en-US')}</span>
-        &nbsp;$TRTL
-      </p>
+      <h6 className='text-xl text-center'>How many tokens?</h6>
 
-      <Image src='/media/trtl.png' alt='' className='w-[180px] h-[180px] my-8 mx-auto' width={180} height={180} priority unoptimized />
+      <Image src='/media/trtl.png' alt='' className='w-[180px] h-[180px] my-4 mx-auto' width={180} height={180} priority unoptimized />
 
       <div className='flex items-center justify-center'>
         <div

@@ -1,12 +1,14 @@
 export const ADA_TOKEN_ID = '52162581184a457fad70470161179c5766f00237d4b67e0f1df1b4e65452544c'
 export const ADA_TOKEN_DECIMALS = 0
+export const ADA_CIRCULATING = 236000000000
 
 export const SOL_TOKEN_ID = '9TMuCmQqMBaW8JRPGJEAuetJt94JVruuKVY8r8HvtYKd'
 export const SOL_TOKEN_DECIMALS = 6
+export const SOL_CIRCULATING = 60000000000
 
 export const SOL_NET = 'mainnet-beta'
 
-export const ADA_APP_ADDRESS = ''
+export const ADA_APP_ADDRESS = 'addr1vx59g85l5wvweap5l76nnt9r429jt3yszm7x5n65aq87q5c0s8szy'
 export const ADA_APP_SECRET_KEY = Array.isArray(process.env.ADA_APP_SECRET_KEY)
   ? process.env.ADA_APP_SECRET_KEY
   : process.env.ADA_APP_SECRET_KEY?.split(',') || []

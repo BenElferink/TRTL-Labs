@@ -47,7 +47,7 @@ const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PagePro
 
         {done ? (
           <div className='flex'>
-            <Button label='Bridge to Solana' disabled onClick={() => setOpenSolanaBridge(true)} />
+            <Button label='Bridge to Solana' onClick={() => setOpenSolanaBridge(true)} />
             <Button label='Bridge to Cardano' disabled onClick={() => setOpenCardanoBridge(true)} />
 
             <BridgeToSolanaModal isOpen={openSolanaBridge} onClose={() => setOpenSolanaBridge(false)} submitted={submitted} />
