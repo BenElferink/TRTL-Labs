@@ -6,7 +6,12 @@ export const SOL_TOKEN_DECIMALS = 6
 
 export const SOL_NET = 'mainnet-beta'
 
-// app wallet: ChCJv4P16YDBCVaM8eoLTaP7MMLE7ooMD5YbynBVtakZ
+export const ADA_APP_ADDRESS = ''
+export const ADA_APP_SECRET_KEY = Array.isArray(process.env.ADA_APP_SECRET_KEY)
+  ? process.env.ADA_APP_SECRET_KEY
+  : process.env.ADA_APP_SECRET_KEY?.split(',') || []
+
+export const SOL_APP_ADDRESS = 'ChCJv4P16YDBCVaM8eoLTaP7MMLE7ooMD5YbynBVtakZ'
 export const SOL_APP_SECRET_KEY = (
   Array.isArray(process.env.SOL_APP_SECRET_KEY) ? process.env.SOL_APP_SECRET_KEY : process.env.SOL_APP_SECRET_KEY?.split(',') || []
 ).map((n) => Number(n))

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { useWallet } from '@meshsdk/react'
 import formatTokenAmount from '@/functions/formatTokenAmount'
-import { RedButton } from './Button'
+import Button, { RedButton } from './Button'
 import Modal from './Modal'
 import Loader from './Loader'
 import WalletUrl from './WalletUrl'
@@ -23,12 +24,16 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
       })
 
       wallet.getAssets().then((values) => {
-        const ownedTrtl = Number(values.find((v) => v.unit === ADA_TOKEN_ID)?.quantity || '0')
-
-        setBalanceAmount(ownedTrtl)
+        setBalanceAmount(Number(values.find((v) => v.unit === ADA_TOKEN_ID)?.quantity || '0'))
       })
     }
   }, [connected])
+
+  const buildTx = async () => {
+    toast.loading('Coming Soon...', { duration: 3000 })
+
+    return
+  }
 
   if (!connected && isOpen) {
     return <CardanoWalletModal isOpen onClose={() => {}} />
@@ -78,7 +83,7 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
         <p className='my-2 text-center text-zinc-400'>
           You&apos;ll get:&nbsp;
           <span className='text-zinc-200'>
-            {(formatTokenAmount.fromChain(selectedAmount, ADA_TOKEN_DECIMALS) / (236 / 60)).toLocaleString('en-US')}
+            {Math.floor(formatTokenAmount.fromChain(selectedAmount, ADA_TOKEN_DECIMALS) / (236 / 60)).toLocaleString('en-US')}
           </span>
           &nbsp;$TRTL on Solana
         </p>
@@ -90,6 +95,8 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
           <br />
           Solana circulating: 60b
         </p>
+
+        <Button label='Build TX' disabled={!selectedAmount} onClick={buildTx} />
       </div>
     </Modal>
   )
