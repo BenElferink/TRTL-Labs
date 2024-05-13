@@ -55,11 +55,19 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
           const appATA = await getATA(appKeypair.publicKey)
 
+          console.log('appATA', appATA.address)
+          console.log('docs count:', docs.length)
+
           for await (const doc of docs) {
             const { solAddress, solAmount } = doc.data() as DBBridgePayload
 
             const toATA = await getATA(new PublicKey(solAddress))
+
+            console.log('toATA', toATA.address)
+
             const txHash = await sendTo(toATA, solAmount)
+
+            console.log('transfer done', txHash)
 
             await collection.doc(doc.id).update({
               solTxHash: txHash,
@@ -67,6 +75,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             })
           }
         }
+
+        console.log('process done')
 
         return res.status(204).end()
       }

@@ -78,9 +78,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           return res.status(400).end('Sender does not have a linked wallet')
         }
 
-        const solAmount = formatTokenAmount.toChain(
-          formatTokenAmount.fromChain(sentAmount / (ADA_CIRCULATING / SOL_CIRCULATING), ADA_TOKEN_DECIMALS),
-          SOL_TOKEN_DECIMALS
+        const solAmount = Math.floor(
+          formatTokenAmount.toChain(
+            formatTokenAmount.fromChain(sentAmount / (ADA_CIRCULATING / SOL_CIRCULATING), ADA_TOKEN_DECIMALS),
+            SOL_TOKEN_DECIMALS
+          )
         )
 
         const { id } = await bridgeCollection.add({
