@@ -5,7 +5,7 @@ import Url from '@/components/Url'
 import Button from '@/components/Button'
 import ConnectWallets from '@/components/ConnectWallets'
 import BridgeToSolanaModal from '@/components/BridgeToSolanaModal'
-import type { DBPayload } from '@/@types'
+import type { DBWalletPayload } from '@/@types'
 
 export const getServerSideProps = (async ({ query }) => {
   const id = (query.id || '') as string
@@ -15,12 +15,12 @@ export const getServerSideProps = (async ({ query }) => {
     const doc = await collection.doc(id).get()
 
     if (doc.exists) {
-      return { props: { ...(doc.data() as DBPayload), docId: id } }
+      return { props: { ...(doc.data() as DBWalletPayload), docId: id } }
     }
   }
 
   return { props: { docId: id, cardano: '', solana: '' } }
-}) satisfies GetServerSideProps<DBPayload & { docId: string }>
+}) satisfies GetServerSideProps<DBWalletPayload & { docId: string }>
 
 export type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>
 

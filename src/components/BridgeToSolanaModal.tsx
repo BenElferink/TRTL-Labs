@@ -19,6 +19,7 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
   const { wallet, connected, disconnect } = useWallet()
   const [connectedAddress, setConnectedAddress] = useState('')
 
+  const [submitting, setSubmitting] = useState(false)
   const [amounts, setAmounts] = useState({
     appBalance: 0,
     balance: 0,
@@ -59,6 +60,9 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
 
     return
 
+    setSubmitting(true)
+    let toastId = toast.loading('Building TX...')
+
     try {
       const tx = new Transaction({ initiator: wallet })
       const inputs = keepRelevant(new Map([[ADA_TOKEN_ID, amounts.selected.toString()]]), await wallet.getUtxos())
@@ -80,12 +84,21 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
       console.log('Submitting TX...', signedTx)
       const txHash = await wallet.submitTx(signedTx)
 
+      await axios.post('/api/bridge/cardano-to-solana/tx', { txHash })
+
+      toast.dismiss(toastId)
+      toastId = toast.loading('Awaiting Network Confirmation...')
       console.log('Awaiting Network Confirmation...', txHash)
       await txConfirmation(txHash)
+      toast.dismiss(toastId)
+      toast.success('TX Confirmed!')
       console.log('TX Confirmed!', txHash)
-    } catch (error) {
-      // @ts-ignore
-      console.error(error?.message || error)
+    } catch (error: any) {
+      toast.dismiss(toastId)
+      toast.error(error?.message || 'Unknown Error')
+      console.error(error)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -163,7 +176,7 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
         </p>
 
         <div className='my-2'>
-          <Button label='Build TX' disabled={!amounts.selected || amounts.toGet > amounts.appBalance} onClick={buildTx} />
+          <Button label='Build TX' disabled={!amounts.selected || amounts.toGet > amounts.appBalance || submitting} onClick={buildTx} />
         </div>
 
         <p className='mt-4 text-center text-xs text-zinc-400'>
