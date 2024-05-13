@@ -10,9 +10,10 @@ export interface DBWalletPayload {
 }
 
 export interface DBBridgePayload {
-  txHash: string
+  adaTxHash: string
   adaAddress: string
   adaAmount: number
+  solTxHash: string
   solAddress: string
   solAmount: number
   done: boolean

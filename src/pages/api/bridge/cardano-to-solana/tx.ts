@@ -84,7 +84,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         )
 
         const { id } = await bridgeCollection.add({
-          txHash,
+          adaTxHash: txHash,
           adaAddress: senderAddress,
           adaAmount: sentAmount,
           solAddress,

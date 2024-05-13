@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/bridge/cardano-to-solana/cron",
+      "schedule": "*/1 * * * *"
+    }
+  ]
+}
