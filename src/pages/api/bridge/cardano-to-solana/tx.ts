@@ -85,6 +85,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           )
         )
 
+        const { empty } = await bridgeCollection.where('adaTxHash', '==', txHash).get()
+
+        if (!empty) {
+          return res.status(400).end('This TX hash is already used')
+        }
+
         const { id } = await bridgeCollection.add({
           adaTxHash: txHash,
           adaAddress: senderAddress,

@@ -84,12 +84,13 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
       console.log('Submitting TX...', signedTx)
       const txHash = await wallet.submitTx(signedTx)
 
-      await axios.post('/api/bridge/cardano-to-solana/tx', { txHash })
-
       toast.dismiss(toastId)
       toastId = toast.loading('Awaiting Network Confirmation...')
       console.log('Awaiting Network Confirmation...', txHash)
       await txConfirmation(txHash)
+
+      await axios.post('/api/bridge/cardano-to-solana/tx', { txHash })
+
       toast.dismiss(toastId)
       toast.success('TX Confirmed!')
       console.log('TX Confirmed!', txHash)

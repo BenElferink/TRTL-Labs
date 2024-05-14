@@ -187,7 +187,7 @@ const ConnectWallets = (props: {
           <Button
             label='Copy Link'
             onClick={() => {
-              navigator.clipboard.writeText(`https://trtl-wallet-connect.vercel.app/?id=${submitted.id}`)
+              navigator.clipboard.writeText(`https://trtl-solana-bridge.vercel.app/?id=${submitted.id}`)
 
               toast.success('Successfully Copied', { duration: 10000 })
               toast.loading('Now paste the link in your other wallet', { duration: 10000 })
