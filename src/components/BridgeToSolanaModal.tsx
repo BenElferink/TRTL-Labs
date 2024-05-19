@@ -3,6 +3,7 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useWallet } from '@meshsdk/react'
 import { Transaction, keepRelevant } from '@meshsdk/core'
+import badLabsApi from '@/utils/badLabsApi'
 import txConfirmation from '@/functions/txConfirmation'
 import formatTokenAmount from '@/functions/formatTokenAmount'
 import Button, { RedButton } from './Button'
@@ -15,9 +16,13 @@ import type { SubmittedPayload } from '@/@types'
 import type { SolAppBalanceResponse } from '@/pages/api/app-balance/solana'
 import { ADA_APP_ADDRESS, ADA_CIRCULATING, ADA_TOKEN_DECIMALS, ADA_TOKEN_ID, SOL_CIRCULATING, SOL_TOKEN_DECIMALS } from '@/constants'
 
+const gatePolicy = '3b0b923ec2cb5541ffb46b5a4c659c6edee0af60b32ec6061d9ea1eb'
+const gateErrorMessage = 'Must hold a Shell Pass'
+
 const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; onClose: () => void; submitted: SubmittedPayload }) => {
   const { wallet, connected, disconnect } = useWallet()
   const [connectedAddress, setConnectedAddress] = useState('')
+  const [isTokenGateHolder, setIsTokenGateHolder] = useState(false)
 
   const [submitting, setSubmitting] = useState(false)
   const [amounts, setAmounts] = useState({
@@ -39,7 +44,20 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
   useEffect(() => {
     if (connected) {
       wallet.getUsedAddresses().then((values) => {
-        setConnectedAddress(values[0])
+        const a = values[0]
+        setConnectedAddress(a)
+
+        badLabsApi.wallet.getData(a, { withTokens: true }).then(({ tokens }) => {
+          let isHolder = false
+
+          tokens?.forEach(({ tokenId }) => {
+            if (tokenId.indexOf(gatePolicy) === 0) {
+              isHolder = true
+            }
+          })
+
+          setIsTokenGateHolder(isHolder)
+        })
       })
     }
   }, [connected])
@@ -56,9 +74,9 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
   }, [connectedAddress])
 
   const buildTx = async () => {
-    toast.loading('Coming Soon...', { duration: 3000 })
-
-    return
+    if (!isTokenGateHolder) {
+      return toast.error(gateErrorMessage)
+    }
 
     setSubmitting(true)
     let toastId = toast.loading('Building TX...')
