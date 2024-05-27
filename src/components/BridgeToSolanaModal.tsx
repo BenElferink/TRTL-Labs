@@ -16,8 +16,8 @@ import type { SubmittedPayload } from '@/@types'
 import type { SolAppBalanceResponse } from '@/pages/api/app-balance/solana'
 import { ADA_APP_ADDRESS, ADA_CIRCULATING, ADA_TOKEN_DECIMALS, ADA_TOKEN_ID, SOL_CIRCULATING, SOL_TOKEN_DECIMALS } from '@/constants'
 
-const gatePolicy = '3b0b923ec2cb5541ffb46b5a4c659c6edee0af60b32ec6061d9ea1eb'
-const gateErrorMessage = 'Must hold a Shell Pass'
+const gatePolicies = ['3b0b923ec2cb5541ffb46b5a4c659c6edee0af60b32ec6061d9ea1eb']
+const gateErrorMessage = `Must hold 1 of ${gatePolicies.length} Policy IDs`
 
 const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; onClose: () => void; submitted: SubmittedPayload }) => {
   const { wallet, connected, disconnect } = useWallet()
@@ -51,7 +51,7 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
           let isHolder = false
 
           tokens?.forEach(({ tokenId }) => {
-            if (tokenId.indexOf(gatePolicy) === 0) {
+            if (!!gatePolicies.find((pId) => tokenId.indexOf(pId) === 0)) {
               isHolder = true
             }
           })
