@@ -16,7 +16,12 @@ import type { SubmittedPayload } from '@/@types'
 import type { SolAppBalanceResponse } from '@/pages/api/app-balance/solana'
 import { ADA_APP_ADDRESS, ADA_CIRCULATING, ADA_TOKEN_DECIMALS, ADA_TOKEN_ID, SOL_CIRCULATING, SOL_TOKEN_DECIMALS } from '@/constants'
 
-const gatePolicies = ['3b0b923ec2cb5541ffb46b5a4c659c6edee0af60b32ec6061d9ea1eb']
+const gatePolicies = [
+  '4c1e0a4bcdd31f9e0dcdb62c8e7ce2dc69265078f41663ed8ab66816',
+  '54be6339a5b264090ac59bbbddd2e370a89978efe7b8bd575f1e27e2',
+  '3b0b923ec2cb5541ffb46b5a4c659c6edee0af60b32ec6061d9ea1eb',
+]
+
 const gateErrorMessage = `Must hold 1 of ${gatePolicies.length} Policy IDs`
 
 const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; onClose: () => void; submitted: SubmittedPayload }) => {
