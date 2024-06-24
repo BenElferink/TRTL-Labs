@@ -6,6 +6,8 @@ import Button from '@/components/Button'
 import ConnectWallets from '@/components/ConnectWallets'
 import BridgeToSolanaModal from '@/components/BridgeToSolanaModal'
 import type { DBWalletPayload } from '@/@types'
+import Image from 'next/image'
+import Link from 'next/link'
 
 export const getServerSideProps = (async ({ query }) => {
   const id = (query.id || '') as string
@@ -56,9 +58,14 @@ const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PagePro
       </main>
 
       <footer className='p-4 text-center'>
-        <h6 className='text-sm'>
-          Developed by <Url src='https://badfoxmc.com' label='BadFoxMC' />
-        </h6>
+        <Link href='https://labs.badfoxmc.com' target='_blank' rel='noopener noreferrer' className='mb-4 flex items-center justify-center'>
+          <Image src='https://labs.badfoxmc.com/media/logo/badlabs.png' alt='logo' width={50} height={50} />
+          <h5 className='ml-2 text-sm text-start whitespace-nowrap'>
+            <span className='text-xs'>Powered by:</span>
+            <br />
+            Bad Labs
+          </h5>
+        </Link>
       </footer>
     </div>
   )
