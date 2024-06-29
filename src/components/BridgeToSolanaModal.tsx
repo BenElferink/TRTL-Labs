@@ -203,7 +203,7 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
           <Button label='Build TX' disabled={!amounts.selected || amounts.toGet > amounts.appBalance || submitting} onClick={buildTx} />
         </div>
 
-        <p className='mt-4 text-center text-xs text-zinc-400'>
+        {/* <p className='mt-4 text-center text-xs text-zinc-400'>
           My Balance on Cardano:&nbsp;
           <span className='text-zinc-200'>
             {Math.floor(formatTokenAmount.fromChain(amounts.balance, ADA_TOKEN_DECIMALS)).toLocaleString('en-US')}
@@ -215,7 +215,7 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
             {Math.floor(formatTokenAmount.fromChain(amounts.appBalance, SOL_TOKEN_DECIMALS)).toLocaleString('en-US')}
           </span>
           &nbsp;$TRTL
-        </p>
+        </p> */}
       </div>
     </Modal>
   )
