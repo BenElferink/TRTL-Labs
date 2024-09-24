@@ -48,7 +48,7 @@ export const RedButton: (props: ButtonProps) => JSX.Element = (props) => {
   return (
     <Button
       {...rest}
-      colors='bg-red-700 border-red-600 [box-shadow:0_10px_0_0_#7f1d1d,0_15px_0_0_#7f1d1d41] active:[box-shadow:0_0px_0_0_##7f1d1d,0_0px_0_0_#7f1d1d41]'
+      colors="bg-red-700 border-red-600 [box-shadow:0_10px_0_0_#7f1d1d,0_15px_0_0_#7f1d1d41] active:[box-shadow:0_0px_0_0_#7f1d1d,0_0px_0_0_#7f1d1d41]"
     >
       {children}
     </Button>

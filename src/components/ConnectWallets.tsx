@@ -129,7 +129,7 @@ const ConnectWallets = (props: {
         </p>
 
         <div className='my-4'>
-          <RedButton label='Unlink Wallets' onClick={unlinkWallets} />
+          <RedButton label='Unlink Wallets'  onClick={unlinkWallets} />
         </div>
       </div>
     )
