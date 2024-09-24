@@ -1,7 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { firebase, firestore } from '@/utils/firebase'
-import badLabsApi from '@/utils/badLabsApi'
-import { ADA_TOKEN_ID } from '@/constants'
 
 export const config = {
   maxDuration: 300,
@@ -18,22 +16,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     switch (method) {
       case 'GET': {
-        const { with_amount: withAmount } = query
-
         const { docs } = await collection.get()
         const mapped = docs.map((d) => ({ ...d.data(), id: d.id }))
-
-        if (withAmount) {
-          // @ts-ignore
-          for await (const [idx, { cardano }] of mapped.entries()) {
-            const { tokens } = await badLabsApi.wallet.getData(cardano, { withTokens: true })
-
-            const trtl = tokens?.find((t) => t.tokenId === ADA_TOKEN_ID)
-
-            // @ts-ignore
-            mapped[idx].tokenAmount = trtl?.tokenAmount?.onChain || 0
-          }
-        }
 
         return res.status(200).json({
           count: mapped.length,

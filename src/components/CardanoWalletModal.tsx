@@ -26,10 +26,10 @@ const CardanoWalletModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () 
           {/* @ts-ignore */}
           {error ? <p className='text-red-400'>{error?.message || error?.toString()}</p> : null}
 
-          {installedWallets.map(({ name, icon }) => (
+          {installedWallets.map(({ id, name, icon }) => (
             <button
-              key={name}
-              onClick={() => connect(name)}
+              key={id}
+              onClick={() => connect(id)}
               disabled={connected || connecting}
               className='w-full max-w-[420px] my-2 mx-auto p-4 flex items-center justify-between rounded-lg bg-zinc-700 bg-opacity-70 hover:bg-zinc-600 hover:bg-opacity-70 disabled:opacity-40'
             >

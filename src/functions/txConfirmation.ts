@@ -1,12 +1,12 @@
-import badLabsApi, { type BadLabsApiTransaction } from '@/utils/badLabsApi'
+import axios from 'axios'
 import sleep from './sleep'
 
-const txConfirmation = async (_txHash: string): Promise<BadLabsApiTransaction> => {
+const txConfirmation = async (_txHash: string): Promise<void> => {
   try {
-    const data = await badLabsApi.transaction.getData(_txHash)
+    const { data: tx } = await axios.get(`/api/transaction/${_txHash}`)
 
-    if (data.block) {
-      return data
+    if (tx.block) {
+      return
     } else {
       await sleep(1000)
       return await txConfirmation(_txHash)

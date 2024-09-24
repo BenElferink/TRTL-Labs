@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import blockfrost from '@/utils/blockfrost'
 import { firestore } from '@/utils/firebase'
-import badLabsApi from '@/utils/badLabsApi'
 import formatTokenAmount from '@/functions/formatTokenAmount'
 import { ADA_APP_ADDRESS, ADA_CIRCULATING, ADA_TOKEN_DECIMALS, ADA_TOKEN_ID, SOL_CIRCULATING, SOL_TOKEN_DECIMALS } from '@/constants'
 
@@ -18,46 +18,38 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     switch (method) {
       case 'POST': {
         const { txHash } = body
-        const { utxos } = await badLabsApi.transaction.getData(txHash, { withUtxos: true })
+        const { inputs, outputs } = await blockfrost.txsUtxos(txHash)
+        const received: Record<string, number> = {}
 
-        const matchedUtxos = utxos?.filter(
-          ({ address, tokens }) => address.to === ADA_APP_ADDRESS && !!tokens.find(({ tokenId }) => tokenId === ADA_TOKEN_ID)
-        )
+        inputs.forEach((inp) => {
+          const from = inp.address
 
-        if (!matchedUtxos || !matchedUtxos.length) {
-          return res.status(400).end('TX does not match Bridge conditions')
+          outputs.forEach((outp) => {
+            const to = outp.address
+
+            if (to === ADA_APP_ADDRESS) {
+              outp.amount.forEach(({ unit, quantity }) => {
+                if (unit === ADA_TOKEN_ID) {
+                  if (received[from]) {
+                    received[from] += +quantity
+                  } else {
+                    received[from] = +quantity
+                  }
+                }
+              })
+            }
+          })
+        })
+
+        const objEntries = Object.entries(received)
+
+        if (!objEntries.length) {
+          return res.status(400).end('TX does not match bridge conditions')
+        } else if (objEntries.length > 1) {
+          return res.status(400).end('TX has too many matching bridge conditions')
         }
 
-        const utxosBatched: Record<string, number[]> = {}
-
-        matchedUtxos.forEach(({ address, tokens }) => {
-          const amounts = tokens.filter(({ tokenId }) => tokenId === ADA_TOKEN_ID).map(({ tokenAmount }) => tokenAmount.onChain)
-
-          if (!utxosBatched[address.from]) {
-            utxosBatched[address.from] = amounts
-          } else {
-            utxosBatched[address.from].push(...amounts)
-          }
-        })
-
-        const objEntries = Object.entries(utxosBatched)
-
-        if (objEntries.length > 1) {
-          throw new Error('too many UTXO entries')
-        }
-
-        // remove duplicates
-        objEntries.forEach(([k, v]) => {
-          utxosBatched[k] = v.filter((item, pos, self) => self.indexOf(item) == pos)
-        })
-
-        let senderAddress = ''
-        let sentAmount = 0
-
-        Object.entries(utxosBatched).forEach(([k, v]) => {
-          senderAddress = k
-          sentAmount = v.reduce((total, num) => total + num)
-        })
+        const [[senderAddress, sentAmount]] = objEntries
 
         const walletsCollection = firestore.collection('turtle-syndicate-wallets')
         const bridgeCollection = firestore.collection('trtl-bridge-to-sol')
@@ -66,9 +58,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
         if (!docs.length) {
           return res.status(400).end('Sender does not have a linked wallet')
-        }
-
-        if (docs.length > 1) {
+        } else if (docs.length > 1) {
           return res.status(400).end('Sender has too many linked wallets')
         }
 

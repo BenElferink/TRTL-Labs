@@ -18,6 +18,8 @@ export const SOL_APP_SECRET_KEY = (
   Array.isArray(process.env.SOL_APP_SECRET_KEY) ? process.env.SOL_APP_SECRET_KEY : process.env.SOL_APP_SECRET_KEY?.split(',') || []
 ).map((n) => Number(n))
 
+export const BLOCKFROST_API_KEY = process.env.BLOCKFROST_API_KEY || ''
+
 export const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || ''
 export const FIREBASE_APP_ID = process.env.FIREBASE_APP_ID || ''
 export const FIREBASE_AUTH_DOMAIN = process.env.FIREBASE_AUTH_DOMAIN || ''

@@ -10,7 +10,7 @@ const WalletUrl = ({ type, address }: { type: 'cardano' | 'solana'; address: str
       }
 
       case 'solana': {
-        return 'https://explorer.solana.com/address/'
+        return 'https://solscan.io/account/'
       }
 
       default: {

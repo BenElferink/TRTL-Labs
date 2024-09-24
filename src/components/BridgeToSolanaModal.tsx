@@ -3,7 +3,6 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useWallet } from '@meshsdk/react'
 import { Transaction, keepRelevant } from '@meshsdk/core'
-import badLabsApi from '@/utils/badLabsApi'
 import txConfirmation from '@/functions/txConfirmation'
 import formatTokenAmount from '@/functions/formatTokenAmount'
 import Button, { RedButton } from './Button'
@@ -48,18 +47,21 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
 
   useEffect(() => {
     if (connected) {
-      wallet.getUsedAddresses().then((values) => {
-        const a = values[0]
+      wallet.getUsedAddresses().then((addresses) => {
+        const a = addresses[0]
         setConnectedAddress(a)
 
-        badLabsApi.wallet.getData(a, { withTokens: true }).then(({ tokens }) => {
+        wallet.getPolicyIds().then((policies) => {
           let isHolder = false
 
-          tokens?.forEach(({ tokenId }) => {
-            if (!!gatePolicies.find((pId) => tokenId.indexOf(pId) === 0)) {
+          for (let i = 0; i < policies.length; i++) {
+            const p = policies[i]
+
+            if (!!gatePolicies.includes(p)) {
               isHolder = true
+              break
             }
-          })
+          }
 
           setIsTokenGateHolder(isHolder)
         })
