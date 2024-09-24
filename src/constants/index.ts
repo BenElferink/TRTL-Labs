@@ -24,3 +24,5 @@ export const FIREBASE_AUTH_DOMAIN = process.env.FIREBASE_AUTH_DOMAIN || ''
 export const FIREBASE_MESSAGING_SENDER_ID = process.env.FIREBASE_MESSAGING_SENDER_ID || ''
 export const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || ''
 export const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET || ''
+
+export const TAPTOOLS_API_KEY = process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '';
