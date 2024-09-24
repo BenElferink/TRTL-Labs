@@ -38,9 +38,15 @@ const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PagePro
 
   useEffect(() => setReady(true), [])
 
-  const [openSolanaBridge, setOpenSolanaBridge] = useState(false)
-  const [openCardanoBridge, setOpenCardanoBridge] = useState(false)
-  const [openSoonModal, setOpenScrollingModal] = useState(false)
+  const [openModals, setOpenModals] = useState({
+    solanaBridge: false,
+    cardanoBridge: false,
+    mintSidekick: false,
+  })
+
+  const toggleModal = (name: keyof typeof openModals) => {
+    setOpenModals((prev) => ({ ...prev, [name]: !prev[name] }))
+  }
 
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-between'>
@@ -53,16 +59,25 @@ const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PagePro
         <ConnectWallets ready={ready} done={done} setDone={setDone} submitted={submitted} setSubmitted={setSubmitted} />
 
         {done ? (
-          <div className='flex'>
-            <Button label='Bridge to Solana' onClick={() => setOpenSolanaBridge(true)} />
-            <Button
-              label='Mint Sidekick'
-              colors='bg-green-500 border-green-400 [box-shadow:0_10px_0_0_#276749,0_15px_0_0_#27674941] active:[box-shadow:0_0px_0_0_#276749,0_0px_0_0_#27674941]'
-              onClick={() => setOpenScrollingModal(true)} // Open MintModal on button click
-            />
-            <Button label='Bridge to Cardano' disabled onClick={() => setOpenCardanoBridge(true)} />
-            <BridgeToSolanaModal isOpen={openSolanaBridge} onClose={() => setOpenSolanaBridge(false)} submitted={submitted} />
-            <SoonModal isOpen={openSoonModal} onClose={() => setOpenScrollingModal(false)} /> {/* ScrollingModal controlled by state */}
+          <div>
+            <div className='my-2 flex'>
+              <Button
+                label='Mint Turtle'
+                colors='bg-green-500 border-green-400 [box-shadow:0_10px_0_0_#276749,0_15px_0_0_#27674941] active:[box-shadow:0_0px_0_0_#276749,0_0px_0_0_#27674941]'
+                onClick={() => window.open('https://trtl-nft-swap.vercel.app', '_blank', 'noopener noreferrer')}
+              />
+              <Button
+                label='Mint Sidekick'
+                colors='bg-green-500 border-green-400 [box-shadow:0_10px_0_0_#276749,0_15px_0_0_#27674941] active:[box-shadow:0_0px_0_0_#276749,0_0px_0_0_#27674941]'
+                onClick={() => toggleModal('mintSidekick')} // Open MintModal on button click
+              />
+            </div>
+            <div className='my-2 flex'>
+              <Button label='Bridge to Solana' onClick={() => toggleModal('solanaBridge')} />
+              <Button label='Bridge to Cardano' disabled onClick={() => toggleModal('cardanoBridge')} />
+            </div>
+            <SoonModal isOpen={openModals['mintSidekick']} onClose={() => toggleModal('mintSidekick')} /> {/* ScrollingModal controlled by state */}
+            <BridgeToSolanaModal isOpen={openModals['solanaBridge']} onClose={() => toggleModal('solanaBridge')} submitted={submitted} />
           </div>
         ) : null}
       </main>
