@@ -97,7 +97,7 @@ const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PagePro
       calculateRequiredADALPTokensV2(adaprice, adaTvlV2, adaLpTokensV2, setLPTokensNeededV2);
       calculateRequiredSOLLPTokens(setLPTokensSolNeeded);
     }
-  }, [adaprice, adaTvlV1, adaTvlV2, adaLpTokensV1, adaLpTokensV2, lpTokensSolNeeded]);
+  }, [adaLpTokensV1, adaLpTokensV2, adaTvlV1, adaTvlV2, adaprice]);
 
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-between'>

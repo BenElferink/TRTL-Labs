@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatNumber } from "../functions/formatNumber";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import ImageCarousel from "./ImageCarousel";
-import { BlockfrostProvider, largestFirst, MeshTxBuilder, UtxoSelection } from "@meshsdk/core";
+import { BlockfrostProvider, MeshTxBuilder } from "@meshsdk/core";
 import { useWallet } from "@meshsdk/react";
 import { BLOCKFROST_API_KEY, SIDEKICK_MINT_ADA_PAYMENTS } from "@/constants";
 
@@ -32,7 +32,8 @@ const MintModal = ({
   const [error, setError] = useState<string | null>(null);
   const [isSolSelected, setIsSolSelected] = useState<boolean>(true);
   const [isAdaV1Selected, setIsAdaV1Selected] = useState<boolean>(true);
-  const [isMinting, setIsMinting] = useState<boolean>(false);
+  const [mintStatus, setMintStatus] = useState<string>(""); // State to track mint status
+  const [loadingDots, setLoadingDots] = useState(0); // Tracks the number of dots to display
 
   if (!isOpen) return null; // Don't render the modal if `isOpen` is false
 
@@ -44,7 +45,6 @@ const MintModal = ({
       : lpTokensNeededADAV2; // ADA V2 LP is selected
 
   const lpTokensNeeded = getLpTokensNeeded();
-
   const totalCost = mintAmount !== null ? mintAmount * lpTokensNeeded : 0;
 
   const images = [
@@ -62,113 +62,87 @@ const MintModal = ({
       console.error("Error: Wallet not connected. Cardano Address or Solana Address is missing.");
       return;
     }
-  
-    if (mintAmount !== null && mintAmount > 0) {
-      setIsMinting(true); // Start minting process
-      console.log("Minting process started");
-      console.log("Mint Amount:", mintAmount);
-  
+
+    if (mintAmount !== null && mintAmount > 0 && lpTokensNeeded > 0) {
+      setMintStatus("Building TX..."); // Show "Building TX" status
+
       try {
         let recipientAddress: string;
         let asset: string;
-  
-        // Determine the recipient address and asset based on LP type and pool selected
-        if (isSolSelected) {
-          recipientAddress = cardanoAddress
 
-          //  TO DO         
-          //  SOL TX build and Sign
-          //             
-          setIsMinting(false)
+        if (isSolSelected) {
+          recipientAddress = cardanoAddress;
           onClose();
           return;
         } else {
           recipientAddress = SIDEKICK_MINT_ADA_PAYMENTS;
           if (isAdaV1Selected) {
-            asset = "e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d86ccd6ccf11c5eab6a9964bc9a080a506342a4bb037209e100f0be238da7495a9c"; 
-            console.log("Using ADA V1 LP");
+            asset = "e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d86ccd6ccf11c5eab6a9964bc9a080a506342a4bb037209e100f0be238da7495a9c";
           } else {
             asset = "f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c98cd1a0de51bf17c8ae857f72f215c75a447e4d04fa35cb58364e85e476012c3";
-            console.log("Using ADA V2 LP");
           }
         }
-  
-        const amount = String((mintAmount * lpTokensNeeded).toFixed(0));
-        console.log(amount)
-        console.log('Wallet:', wallet)
-        console.log("Recipient Address:", recipientAddress);
-        console.log("Asset:", asset);
-        console.log(`Amount of ${asset} to mint:`, amount);
-  
+
+        const amount = '100'//String((mintAmount*lpTokensNeeded).toFixed(0));
+
         // Create a new transaction builder instance
         const txBuilder = new MeshTxBuilder({
           fetcher: blockchainProvider,
-          evaluator: blockchainProvider
+          evaluator: blockchainProvider,
         });
-        
-        // Fetch UTXOs and change address
+
         const utxos = await wallet.getUtxos();
-        console.log("UTXOs fetched:", utxos);
         const changeAddress = await wallet.getChangeAddress();
-        console.log("Change Address:", changeAddress);
-        
-        const userbalance = checkUserBalance(utxos,asset)
-        
-        if(userbalance < parseInt(amount)){
-          setError('Insufficient User Balance');
-          setIsMinting(false);
+
+        const userbalance = checkUserBalance(utxos, asset);
+
+        if (userbalance < parseInt(amount)) {
+          setError("Insufficient User Balance");
+          setMintStatus("");
           return;
         }
 
         // Build the transaction
         const unsignedTx = await txBuilder
-          .txOut(recipientAddress, [{ unit: asset, quantity: amount },{unit: "lovelace", quantity: "4000000"}])
+          .txOut(recipientAddress, [{ unit: asset, quantity: amount },{ unit: "lovelace", quantity: "4000000" }])
           .changeAddress(changeAddress)
           .selectUtxosFrom(utxos)
           .complete();
-        
-        // Sign the transaction
+
+        setMintStatus("Awaiting TX signature..."); // Show "Awaiting TX signature" status
+
         const signedTx = await wallet.signTx(unsignedTx);
-        console.log("Signed Transaction:", signedTx);
-        
-        // Submit the transaction
+        setMintStatus("Awaiting confirmation..."); // Show "Awaiting confirmation" status
+
         const txHash = await wallet.submitTx(signedTx);
-        console.log("Transaction submitted! Hash:", txHash);
-        
+
         blockchainProvider.onTxConfirmed(txHash, () => {
           alert(`Transaction successful! Hash: ${txHash}`);
-          setIsMinting(false);
+          setMintStatus("");
           onClose(); // Close modal after minting
         });
-        
+
       } catch (error) {
         setError("Minting failed. Please try again.");
-        console.error("Minting error:", error);
-        setIsMinting(false);
+        setMintStatus("");
       }
     } else {
       setError("Please enter a valid mint amount.");
-      console.error("Error: Invalid mint amount. Amount is null or less than 1.");
     }
   };
 
   function checkUserBalance(fetchedUTXOs: any, asset: string) {
     let totalBalance = 0;
-
-    // Parse the fetchedUTXO string to an object if it's in string format
     const utxoList = typeof fetchedUTXOs === 'string' ? JSON.parse(fetchedUTXOs) : fetchedUTXOs;
-
     utxoList.forEach((utxo: { output: { amount: any[]; }; }) => {
-        utxo.output.amount.forEach(amount => {
-            if (amount.unit === asset) {
-                totalBalance += Number(amount.quantity);
-            }
-        });
+      utxo.output.amount.forEach((amount) => {
+        if (amount.unit === asset) {
+          totalBalance += Number(amount.quantity);
+        }
+      });
     });
-    console.log('User Balance',totalBalance)
     return totalBalance;
-}
-
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
@@ -176,10 +150,8 @@ const MintModal = ({
     setError(value < 1 ? "Mint amount cannot be negative." : null);
   };
 
-  const incrementAmount = () =>
-    setMintAmount((prev) => (prev !== null ? prev + 1 : 1));
-  const decrementAmount = () =>
-    setMintAmount((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+  const incrementAmount = () => setMintAmount((prev) => (prev !== null ? prev + 1 : 1));
+  const decrementAmount = () => setMintAmount((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
 
   const toggleLPType = () => setIsSolSelected(!isSolSelected);
   const toggleAdaVersion = () => setIsAdaV1Selected(!isAdaV1Selected);
@@ -203,7 +175,6 @@ const MintModal = ({
 
             <ImageCarousel images={images} />
 
-            {/* Toggle switch between TRTL/SOL and TRTL/ADA */}
             <div className="mb-4 mt-2 flex items-center justify-center">
               <span className="mr-2 px-4 py-2 text-white">TRTL/ADA LP</span>
               <div
@@ -266,14 +237,17 @@ const MintModal = ({
 
             {error && <p className="text-red-500 text-center">{error}</p>}
 
-            <div className="flex flex-col mt-4">
+            <div className="relative inline-flex items-center">
               <button
                 onClick={handleMint}
-                className="bg-green-600 text-white mx-auto px-4 py-2 rounded-md hover:bg-green-500"
-                disabled={isMinting}
+                disabled={mintStatus !== ""}
+                className="bg-gradient-to-b from-blue-500 via-indigo-600 to-purple-700 text-white px-6 py-2 rounded-lg hover:scale-105 disabled:opacity-50"
               >
-                {isMinting ? "Minting..." : "Mint"}
+                {mintStatus || "Mint"}
               </button>
+              {mintStatus && (
+                <div className="ml-4 text-white">{loadingDots < 4 ? ".".repeat(loadingDots) : ""}</div>
+              )}
             </div>
           </div>
         </section>

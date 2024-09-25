@@ -24,12 +24,6 @@ const ImageCarousel = ({ images, interval = 5000 }: ImageCarouselProps) => {
     );
   };
 
-  // Automatically cycle through images every few seconds
-  useEffect(() => {
-    const intervalId = setInterval(goToNextImage, interval);
-    return () => clearInterval(intervalId); // Clean up the interval on component unmount
-  }, [interval]);
-
   // Calculate the previous and next image indices
   const prevImageIndex =
     currentImageIndex === 0 ? images.length - 1 : currentImageIndex - 1;
