@@ -1,5 +1,3 @@
-'use client'
-
 import { Dispatch, Fragment, SetStateAction, useEffect, useState } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -54,15 +52,15 @@ const ConnectWallets = (props: {
     }
 
     const payload = {
-      cardano: cAddy,
+      cardano: cAddy ,
       solana: sAddy,
     }
 
     const hasAllWallets = !!payload.cardano && !!payload.solana
     const toastId = hasAllWallets ? toast.loading('Linking wallets...', { duration: 1000 * 300 }) : ''
-
+    
     try {
-      const { data } = await axios.post(`/api/wallets?id=${submitted.id}`, payload)
+      const { data } = await axios.post(`/api/wallets?`, payload)
       const item = data.items[0]
 
       setSubmitted(item)
@@ -90,7 +88,6 @@ const ConnectWallets = (props: {
     const toastId = toast.loading('Unlinking wallets...', { duration: 1000 * 300 })
 
     try {
-      await axios.delete(`/api/wallets?id=${submitted.id}`)
 
       cardano.disconnect()
       await solana.disconnect()
@@ -112,6 +109,7 @@ const ConnectWallets = (props: {
 
   useEffect(() => {
     if (ready && !done && (cardano.connected || solana.connected)) saveWallets()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, done, cardano.connected, solana.connected])
 
   if (done) {
