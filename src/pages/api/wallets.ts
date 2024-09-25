@@ -12,7 +12,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const { method, query, body } = req;
 
   const client = await clientPromise;
-  const db = client.db('TRTL'); // Replace with your MongoDB database name
+  const db = client.db('TRTL');
   const collection = db.collection('turtle-syndicate-wallets');
 
   try {

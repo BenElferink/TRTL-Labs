@@ -24,7 +24,7 @@
   "dependencies": {
     "@blockfrost/blockfrost-js": "^5.5.0",
     "@heroicons/react": "^2.1.5",
-    "@meshsdk/core": "^1.7.6",
+    "@meshsdk/core": "^1.7.2",
     "@meshsdk/react": "^1.7.6",
     "@solana/spl-token": "^0.4.6",
     "@solana/wallet-adapter-base": "^0.9.23",

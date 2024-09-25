@@ -5,8 +5,7 @@ import axios from 'axios'
 import Button from '@/components/Button'
 import ConnectWallets from '@/components/ConnectWallets'
 import BridgeToSolanaModal from '@/components/BridgeToSolanaModal'
-//import MintModal from '@/components/MintModal'
-import SoonModal from '@/components/SoonModal'
+import MintModal from '@/components/MintModal'
 import type { DBWalletPayload } from '@/@types'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -27,10 +26,7 @@ export const getServerSideProps: GetServerSideProps<DBWalletPayload & { docId: s
       const client = await clientPromise;
       const db = client.db('TRTL'); 
       const collection = db.collection('turtle-syndicate-wallets'); 
-      console.log(collection)
       const doc = await collection.findOne({ _Id: id });
-
-      console.log(doc?._id)
       
       if (doc) {
         const transformedDoc: DBWalletPayload = {
@@ -131,7 +127,16 @@ const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PagePro
               <Button label='Bridge to Solana' onClick={() => toggleModal('solanaBridge')} />
               <Button label='Bridge to Cardano' disabled onClick={() => toggleModal('cardanoBridge')} />
             </div>
-            <SoonModal isOpen={openModals['mintSidekick']} onClose={() => toggleModal('mintSidekick')} /> {/* ScrollingModal controlled by state */}
+
+            <MintModal 
+            isOpen={openModals['mintSidekick']} 
+            lpTokensNeededADAV1={lpTokensNeededV1} 
+            lpTokensNeededADAV2={lpTokensNeededV2} 
+            lpTokensNeededSOL={lpTokensSolNeeded} 
+            onClose={() => toggleModal('mintSidekick')}
+            cardanoAddress = {submitted.cardano}
+            solanaAddress = {submitted.solana}/>
+
             <BridgeToSolanaModal isOpen={openModals['solanaBridge']} onClose={() => toggleModal('solanaBridge')} submitted={submitted} />
           </div>
         ) : null}
