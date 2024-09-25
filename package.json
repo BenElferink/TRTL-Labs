@@ -36,7 +36,7 @@
     "csvtojson": "^2.0.10",
     "firebase": "^10.12.2",
     "mongodb": "^6.9.0",
-    "next": "14.2.13",
+    "next": "^14.2.13",
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1"

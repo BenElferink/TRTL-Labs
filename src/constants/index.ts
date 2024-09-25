@@ -27,6 +27,8 @@ export const FIREBASE_MESSAGING_SENDER_ID = process.env.FIREBASE_MESSAGING_SENDE
 export const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || ''
 export const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET || ''
 
+export const MONGODB_URI = process.env.MONGODB_URI || '';
+
 export const TAPTOOLS_API_KEY = process.env.TAPTOOLS_API_KEY || '';
 
 export const V1_TRTL_ADA_LP_TOKEN_POLICY = "e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d86"
