@@ -1,11 +1,12 @@
 import { MongoClient, MongoClientOptions } from 'mongodb';
+import { MONGODB_URI } from '@/constants';
 
 // Extend the NodeJS global namespace
 declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-const uri = process.env.MONGODB_URI || '';
+const uri = MONGODB_URI || '';
 
 const options: MongoClientOptions = {};
 
