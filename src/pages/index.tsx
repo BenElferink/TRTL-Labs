@@ -1,6 +1,7 @@
+'use client'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { useEffect, useState } from 'react'
-import { firestore } from '@/utils/firebase'
+import axios from 'axios'
 import Button from '@/components/Button'
 import ConnectWallets from '@/components/ConnectWallets'
 import BridgeToSolanaModal from '@/components/BridgeToSolanaModal'
@@ -9,32 +10,58 @@ import SoonModal from '@/components/SoonModal'
 import type { DBWalletPayload } from '@/@types'
 import Image from 'next/image'
 import Link from 'next/link'
-// import { getAssetPrice } from "./api/dynamic_lp_price/getUSDPrice";
-// import { getADAV1PoolSupply, getADAV2PoolSupply } from "./api/dynamic_lp_price/getADATotalLPTokens";
-// import { fetchTrtlV1PoolData, fetchTrtlV2PoolData } from "./api/dynamic_lp_price/getADATRTLTVLData";
-// import { getSOLTRTLLPprice } from "./api/dynamic_lp_price/getTRTLSOLData";
+import {
+  fetchAssetPrice,
+  calculateRequiredADALPTokensV1,
+  calculateRequiredADALPTokensV2,
+  calculateRequiredSOLLPTokens,
+  fetchTotalADALPTokens
+} from '../functions/dynamicPricingLP';
+import clientPromise from '@/utils/mongo'
 
-export const getServerSideProps = (async ({ query }) => {
-  const id = (query.id || '') as string
+export const getServerSideProps: GetServerSideProps<DBWalletPayload & { docId: string }> = async ({ query }) => {
+  const id = (query.id || '') as string;
 
   if (!!id) {
-    const collection = firestore.collection('turtle-syndicate-wallets')
-    const doc = await collection.doc(id).get()
+    try {
+      const client = await clientPromise;
+      const db = client.db('TRTL'); 
+      const collection = db.collection('turtle-syndicate-wallets'); 
+      console.log(collection)
+      const doc = await collection.findOne({ _Id: id });
 
-    if (doc.exists) {
-      return { props: { ...(doc.data() as DBWalletPayload), docId: id } }
+      console.log(doc?._id)
+      
+      if (doc) {
+        const transformedDoc: DBWalletPayload = {
+          cardano: doc.cardano || '',
+          solana: doc.solana || '',
+        };
+
+        return { props: { ...transformedDoc, docId: id } };
+      }
+    } catch (error) {
+      console.error('Failed to fetch document:', error);
     }
   }
 
-  return { props: { docId: id, cardano: '', solana: '' } }
-}) satisfies GetServerSideProps<DBWalletPayload & { docId: string }>
+  return { props: { docId: id, cardano: '', solana: '' } };
+};
 
-export type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>
+export type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>;
 
 const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PageProps) => {
   const [submitted, setSubmitted] = useState({ id: docId, cardano: cardanoAddress, solana: solanaAddress })
   const [ready, setReady] = useState(false)
   const [done, setDone] = useState(!!cardanoAddress && !!solanaAddress)
+  const [adaprice, setAdaPrice] = useState<number | null>(null);
+  const [adaTvlV1, setAdaTvlV1] = useState<number | null>(null);
+  const [adaTvlV2, setAdaTvlV2] = useState<number | null>(null);
+  const [adaLpTokensV1, setV1LPTokens] = useState<number>(0);
+  const [adaLpTokensV2, setV2LPTokens] = useState<number>(0);
+  const [lpTokensNeededV1, setLPTokensNeededV1] = useState<number>(0);
+  const [lpTokensNeededV2, setLPTokensNeededV2] = useState<number>(0);
+  const [lpTokensSolNeeded, setLPTokensSolNeeded] = useState<number>(0);
 
   useEffect(() => setReady(true), [])
 
@@ -47,6 +74,34 @@ const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PagePro
   const toggleModal = (name: keyof typeof openModals) => {
     setOpenModals((prev) => ({ ...prev, [name]: !prev[name] }))
   }
+
+  // Fetch TRTL V1 and V2 Pool Data
+  const fetchTrtlPoolData = async (poolType: 'v1' | 'v2') => {
+    try {
+      const response = await axios.get('/api/dynamic_lp_price/getADATRTLTVLData', {
+        params: { poolType },
+      });
+      return response.data.tvl;
+    } catch (error) {
+      console.error(`Error fetching TRTL ${poolType.toUpperCase()} pool data:`, error);
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    fetchAssetPrice('cardano', setAdaPrice);
+
+    fetchTrtlPoolData('v1').then(setAdaTvlV1);
+    fetchTrtlPoolData('v2').then(setAdaTvlV2);
+
+    fetchTotalADALPTokens(setV1LPTokens, setV2LPTokens);
+
+    if (adaprice !== null && adaTvlV1 !== null && adaTvlV2 !== null && adaLpTokensV1 !== null && adaLpTokensV2 !== null) {
+      calculateRequiredADALPTokensV1(adaprice, adaTvlV1, adaLpTokensV1, setLPTokensNeededV1);
+      calculateRequiredADALPTokensV2(adaprice, adaTvlV2, adaLpTokensV2, setLPTokensNeededV2);
+      calculateRequiredSOLLPTokens(setLPTokensSolNeeded);
+    }
+  }, [adaprice, adaTvlV1, adaTvlV2, adaLpTokensV1, adaLpTokensV2, lpTokensSolNeeded]);
 
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-between'>

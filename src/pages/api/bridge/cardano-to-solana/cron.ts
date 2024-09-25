@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Connection, Keypair, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { Account, getOrCreateAssociatedTokenAccount, transfer } from '@solana/spl-token'
-import { firestore } from '@/utils/firebase'
 import type { DBBridgePayload } from '@/@types'
 import { SOL_APP_SECRET_KEY, SOL_NET, SOL_TOKEN_ID } from '@/constants'
+import clientPromise from '@/utils/mongo'
 
 export const config = {
   maxDuration: 300,
@@ -18,8 +18,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     switch (method) {
       case 'GET': {
-        const collection = firestore.collection('trtl-bridge-to-sol')
-        const { docs } = await collection.where('done', '==', false).get()
+        const client = await clientPromise
+        const db = client.db('TRTL')
+        const collection = db.collection('trtl-bridge-to-sol')
+        const docs = await collection.find({ done: false }).toArray();
 
         if (!!docs.length) {
           const connection = new Connection(clusterApiUrl(SOL_NET), 'confirmed')
@@ -69,10 +71,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
             console.log('transfer done', txHash)
 
-            await collection.doc(doc.id).update({
-              solTxHash: txHash,
-              done: true,
-            })
+            await collection.updateOne(
+              { _id: new Object(doc.id) }, // Filter to find the document with the specific ID
+              {
+                $set: {
+                  solTxHash: txHash,
+                  done: true,
+                },
+              }
+            );
+            
           }
         }
 
