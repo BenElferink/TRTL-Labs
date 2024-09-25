@@ -19,14 +19,6 @@ export const SOL_APP_SECRET_KEY = (
 ).map((n) => Number(n))
 
 export const BLOCKFROST_API_KEY = process.env.BLOCKFROST_API_KEY || ''
-
-export const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || ''
-export const FIREBASE_APP_ID = process.env.FIREBASE_APP_ID || ''
-export const FIREBASE_AUTH_DOMAIN = process.env.FIREBASE_AUTH_DOMAIN || ''
-export const FIREBASE_MESSAGING_SENDER_ID = process.env.FIREBASE_MESSAGING_SENDER_ID || ''
-export const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || ''
-export const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET || ''
-
 export const TAPTOOLS_API_KEY = process.env.TAPTOOLS_API_KEY || '';
 
 export const V1_TRTL_ADA_LP_TOKEN_POLICY = "e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d86"
