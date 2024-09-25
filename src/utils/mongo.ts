@@ -5,7 +5,7 @@ declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-const uri = process.env.MONGODB_URI || ''; // Ensure you set your MongoDB connection string in your environment variables
+const uri = process.env.MONGODB_URI || '';
 
 const options: MongoClientOptions = {};
 
