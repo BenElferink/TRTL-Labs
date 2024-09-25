@@ -83,6 +83,8 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
   const buildTx = async () => {
     if (!isTokenGateHolder) {
       return toast.error(gateErrorMessage)
+    } else {
+      return toast.error('Bridge is closed at the moment...')
     }
 
     setSubmitting(true)
