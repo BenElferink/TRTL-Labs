@@ -97,7 +97,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       case 'DELETE': {
         const { id } = query;
-        console.log('DELETE API CALL - ID:',id)
 
         if (!!id && typeof id === 'string') {
           // Delete the document with the specified ID

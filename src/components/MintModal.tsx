@@ -33,7 +33,6 @@ const MintModal = ({
   const [isSolSelected, setIsSolSelected] = useState<boolean>(true);
   const [isAdaV1Selected, setIsAdaV1Selected] = useState<boolean>(true);
   const [mintStatus, setMintStatus] = useState<string>(""); // State to track mint status
-  const [loadingDots, setLoadingDots] = useState(0); // Tracks the number of dots to display
 
   if (!isOpen) return null; // Don't render the modal if `isOpen` is false
 
@@ -245,9 +244,6 @@ const MintModal = ({
               >
                 {mintStatus || "Mint"}
               </button>
-              {mintStatus && (
-                <div className="ml-4 text-white">{loadingDots < 4 ? ".".repeat(loadingDots) : ""}</div>
-              )}
             </div>
           </div>
         </section>
