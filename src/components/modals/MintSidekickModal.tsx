@@ -46,9 +46,9 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
       const { v1: adaLpTokensV1, v2: adaLpTokensV2 } = totalLpTokens || {}
 
       if (adaprice && adaTvlV1 && adaTvlV2 && adaLpTokensV1 && adaLpTokensV2) {
-        setLPTokensNeededV1(calculateRequiredADALPTokensV1(adaprice, adaTvlV1, adaLpTokensV1))
-        setLPTokensNeededV2(calculateRequiredADALPTokensV2(adaprice, adaTvlV2, adaLpTokensV2))
-        setLPTokensSolNeeded(await calculateRequiredSOLLPTokens())
+        setLPTokensNeededV1(Math.ceil(calculateRequiredADALPTokensV1(adaprice, adaTvlV1, adaLpTokensV1)))
+        setLPTokensNeededV2(Math.ceil(calculateRequiredADALPTokensV2(adaprice, adaTvlV2, adaLpTokensV2)))
+        setLPTokensSolNeeded(Math.ceil(await calculateRequiredSOLLPTokens()))
       }
     })()
   }, [])
@@ -69,15 +69,15 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
     [isSolSelected, isAdaV1Selected, lpTokensSolNeeded, lpTokensNeededV1, lpTokensNeededV2]
   )
 
+  console.log('lpTokensNeeded', lpTokensNeeded)
+
   const buildTx = async () => {
     if (!connected) return setError('Wallet not connected. Please connect your wallet.')
     if (isSolSelected) return setError('For Solana, please create a ticket in Discord.')
 
-    const time = await axios.get<FetchedTimestampResponse>('/api/timestamp')
-    const address = (await wallet.getUsedAddress()).toBech32()
     const dbPayload: DbMintPayload = {
-      timestamp: time.data.now,
-      address,
+      timestamp: (await axios.get<FetchedTimestampResponse>('/api/timestamp')).data.now,
+      address: (await wallet.getUsedAddress()).toBech32(),
       amount: mintAmount,
       didSend: false,
       didMint: false,
@@ -85,13 +85,13 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
 
     if (!dbPayload.address) return setError('Could not get used-address of wallet.')
 
+    setLoading(true)
+    setError('')
+
     const collection = firestore.collection('turtle-sidekick-swaps')
     const { id: docId } = await collection.add(dbPayload)
 
     try {
-      setLoading(true)
-      setError('')
-
       const adaDecimals = 6
       const lpTokenId = isAdaV1Selected ? TRTL_LP['CARDANO']['MINSWAP_V1_TOKEN_ID'] : TRTL_LP['CARDANO']['MINSWAP_V2_TOKEN_ID']
 
@@ -139,7 +139,11 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
 
       onClose() // Close modal after minting
     } catch (e: any) {
-      const msg = (e?.message || e?.toString() || 'Minting failed. Please try again.').trim()
+      console.error(e)
+      const msg = (e?.message || e?.info || e?.toString() || 'Minting failed. Please contact us.').trim()
+
+      toast.dismiss()
+      toast.error(`ERROR: ${msg}`)
 
       if (msg === 'txBuildResult error:') {
         // No context in error = insufficient funds
@@ -217,7 +221,7 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
             )}
 
             <p className='text-white text-center'>
-              {formatNumber(parseInt((mintAmount * lpTokensNeeded).toFixed(0)))} {isSolSelected ? 'SOL' : 'ADA'} LP Tokens required
+              {formatNumber(mintAmount * lpTokensNeeded)} {isSolSelected ? 'SOL' : 'ADA'} LP Tokens required
             </p>
 
             <div className='flex items-center justify-center mt-4 mb-4'>
