@@ -138,8 +138,16 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
       toast.success('NFT minted!')
 
       onClose() // Close modal after minting
-    } catch (error) {
-      setError('Minting failed. Please try again.')
+    } catch (e: any) {
+      const msg = (e?.message || e?.toString() || 'Minting failed. Please try again.').trim()
+
+      if (msg === 'txBuildResult error:') {
+        // No context in error = insufficient funds
+        // See issue: https://github.com/MeshJS/mesh/issues/299
+        setError('txBuildResult error: Insufficient funds')
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }
