@@ -45,7 +45,7 @@ export const calculateRequiredADALPTokensV1 = (adaprice: number | null, adaTvlV1
     if (adaprice !== null && adaTvlV1 !== null && adaLpTokensV1 !== null) {
       const poolValueInUSD = adaTvlV1 * adaprice
       const usdValuePerLPToken = poolValueInUSD / adaLpTokensV1
-      const lpTokensNeededV1 = 95.0 / usdValuePerLPToken
+      const lpTokensNeededV1 = 35.0 / usdValuePerLPToken
 
       return lpTokensNeededV1
     } else {
@@ -64,7 +64,7 @@ export const calculateRequiredADALPTokensV2 = (adaprice: number | null, adaTvlV2
     if (adaprice !== null && adaTvlV2 !== null && adaLpTokensV2 !== null) {
       const poolValueInUSD = adaTvlV2 * adaprice
       const usdValuePerLPToken = poolValueInUSD / adaLpTokensV2
-      const lpTokensNeededV2 = 95.0 / usdValuePerLPToken
+      const lpTokensNeededV2 = 35.0 / usdValuePerLPToken
 
       return lpTokensNeededV2
     } else {
