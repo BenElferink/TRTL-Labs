@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { Connection, Keypair, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { Account, getOrCreateAssociatedTokenAccount, transfer } from '@solana/spl-token'
 import type { DBBridgePayload } from '@/@types'
-import { SOL_APP_SECRET_KEY, SOL_NET, SOL_TOKEN_ID } from '@/constants'
+import { SOL_BRIDGE_APP_SECRET_KEY, SOL_NET, TRTL_COIN } from '@/constants'
 import clientPromise from '@/utils/mongo'
 
 export const config = {
@@ -21,13 +21,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const client = await clientPromise
         const db = client.db('TRTL')
         const collection = db.collection('trtl-bridge-to-sol')
-        const docs = await collection.find({ done: false }).toArray();
+        const docs = await collection.find({ done: false }).toArray()
 
         if (!!docs.length) {
           const connection = new Connection(clusterApiUrl(SOL_NET), 'confirmed')
 
-          const appKeypair = Keypair.fromSecretKey(new Uint8Array(SOL_APP_SECRET_KEY))
-          const tokenPublicKey = new PublicKey(SOL_TOKEN_ID)
+          const appKeypair = Keypair.fromSecretKey(new Uint8Array(SOL_BRIDGE_APP_SECRET_KEY))
+          const tokenPublicKey = new PublicKey(TRTL_COIN['SOLANA']['TOKEN_ID'])
 
           const getATA = async (publicKey: PublicKey): Promise<Account> => {
             try {
@@ -79,8 +79,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
                   done: true,
                 },
               }
-            );
-            
+            )
           }
         }
 

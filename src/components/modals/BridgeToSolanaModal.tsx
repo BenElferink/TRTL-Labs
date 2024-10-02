@@ -6,15 +6,11 @@ import { useWallet } from '@meshsdk/react'
 import { Transaction, keepRelevant } from '@meshsdk/core'
 import txConfirmation from '@/functions/txConfirmation'
 import formatTokenAmount from '@/functions/formatTokenAmount'
-import Button, { RedButton } from './Button'
-import Modal from './Modal'
-import Loader from './Loader'
-import WalletUrl from './WalletUrl'
-import TokenAmount from './TokenAmount'
-import CardanoWalletModal from './CardanoWalletModal'
-import type { SubmittedPayload } from '@/@types'
-import type { SolAppBalanceResponse } from '@/pages/api/app-balance/solana'
-import { ADA_APP_ADDRESS, ADA_CIRCULATING, ADA_TOKEN_DECIMALS, ADA_TOKEN_ID, SOL_CIRCULATING, SOL_TOKEN_DECIMALS } from '@/constants'
+import Button from '../Button'
+import Modal from '../Modal'
+import TokenAmount from '../TokenAmount'
+import type { SolAppBalanceResponse } from '@/pages/api/bridge/app-balance/solana'
+import { ADA_BRIDGE_APP_ADDRESS, TRTL_COIN } from '@/constants'
 
 const gatePolicies = [
   '4c1e0a4bcdd31f9e0dcdb62c8e7ce2dc69265078f41663ed8ab66816',
@@ -24,9 +20,8 @@ const gatePolicies = [
 
 const gateErrorMessage = `Must hold 1 of ${gatePolicies.length} Policy IDs`
 
-const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; onClose: () => void; submitted: SubmittedPayload }) => {
-  const { wallet, connected, disconnect } = useWallet()
-  const [connectedAddress, setConnectedAddress] = useState('')
+const BridgeToSolanaModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const { wallet, connected } = useWallet()
   const [isTokenGateHolder, setIsTokenGateHolder] = useState(false)
 
   const [submitting, setSubmitting] = useState(false)
@@ -38,7 +33,7 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
   })
 
   useEffect(() => {
-    axios.get<SolAppBalanceResponse>('/api/app-balance/solana').then(({ data }) => {
+    axios.get<SolAppBalanceResponse>('/api/bridge/app-balance/solana').then(({ data }) => {
       setAmounts((prev) => ({
         ...prev,
         appBalance: Number(data.tokenAmount.amount),
@@ -48,38 +43,29 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
 
   useEffect(() => {
     if (connected) {
-      wallet.getUsedAddresses().then((addresses) => {
-        const a = addresses[0]
-        setConnectedAddress(a)
+      wallet.getPolicyIds().then((policies) => {
+        let isHolder = false
 
-        wallet.getPolicyIds().then((policies) => {
-          let isHolder = false
+        for (let i = 0; i < policies.length; i++) {
+          const p = policies[i]
 
-          for (let i = 0; i < policies.length; i++) {
-            const p = policies[i]
-
-            if (!!gatePolicies.includes(p)) {
-              isHolder = true
-              break
-            }
+          if (!!gatePolicies.includes(p)) {
+            isHolder = true
+            break
           }
+        }
 
-          setIsTokenGateHolder(isHolder)
+        setIsTokenGateHolder(isHolder)
+
+        wallet.getAssets().then((values) => {
+          setAmounts((prev) => ({
+            ...prev,
+            balance: Number(values.find((v) => v.unit === TRTL_COIN['CARDANO']['TOKEN_ID'])?.quantity || '0'),
+          }))
         })
       })
     }
   }, [connected])
-
-  useEffect(() => {
-    if (!!connectedAddress && connectedAddress === submitted.cardano) {
-      wallet.getAssets().then((values) => {
-        setAmounts((prev) => ({
-          ...prev,
-          balance: Number(values.find((v) => v.unit === ADA_TOKEN_ID)?.quantity || '0'),
-        }))
-      })
-    }
-  }, [connectedAddress])
 
   const buildTx = async () => {
     if (!isTokenGateHolder) {
@@ -93,12 +79,12 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
 
     try {
       const tx = new Transaction({ initiator: wallet })
-      const inputs = keepRelevant(new Map([[ADA_TOKEN_ID, amounts.selected.toString()]]), await wallet.getUtxos())
+      const inputs = keepRelevant(new Map([[TRTL_COIN['CARDANO']['TOKEN_ID'], amounts.selected.toString()]]), await wallet.getUtxos())
 
       tx.setTxInputs(inputs)
-      tx.sendAssets({ address: ADA_APP_ADDRESS }, [
+      tx.sendAssets({ address: ADA_BRIDGE_APP_ADDRESS }, [
         {
-          unit: ADA_TOKEN_ID,
+          unit: TRTL_COIN['CARDANO']['TOKEN_ID'],
           quantity: amounts.selected.toString(),
         },
       ])
@@ -131,60 +117,23 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
     }
   }
 
-  if (!connected && isOpen) {
-    return <CardanoWalletModal isOpen onClose={() => {}} />
-  }
-
-  if (!connectedAddress) {
-    return (
-      <Modal open={isOpen} onClose={() => onClose()}>
-        <Loader />
-      </Modal>
-    )
-  }
-
-  if (connectedAddress !== submitted.cardano) {
-    return (
-      <Modal open={isOpen} onClose={() => onClose()}>
-        <div className='flex flex-col items-center text-center'>
-          <p className='my-2 text-lg'>
-            Connected Wallet does not match Linked Wallet,
-            <br />
-            please connect a different wallet.
-          </p>
-
-          <p className='my-2 text-sm'>
-            Connected with: <WalletUrl type='cardano' address={submitted.cardano} />
-            <br />
-            Linked with: <WalletUrl type='cardano' address={connectedAddress} />
-          </p>
-
-          <RedButton
-            label='Disconnect'
-            onClick={() => {
-              setConnectedAddress('')
-              disconnect()
-            }}
-          />
-        </div>
-      </Modal>
-    )
-  }
-
   return (
     <Modal open={isOpen} onClose={() => onClose()}>
       <div className='flex flex-col items-center'>
         <TokenAmount
           balance={amounts.balance}
-          decimals={ADA_TOKEN_DECIMALS}
+          decimals={TRTL_COIN['CARDANO']['DECIMALS']}
           selectedAmount={amounts.selected}
           setSelectedAmount={(v) => {
             setAmounts((prev) => ({
               ...prev,
               selected: v,
               toGet: formatTokenAmount.toChain(
-                formatTokenAmount.fromChain(v / (ADA_CIRCULATING / SOL_CIRCULATING), ADA_TOKEN_DECIMALS),
-                SOL_TOKEN_DECIMALS
+                formatTokenAmount.fromChain(
+                  v / (TRTL_COIN['CARDANO']['CIRCULATING'] / TRTL_COIN['SOLANA']['CIRCULATING']),
+                  TRTL_COIN['CARDANO']['DECIMALS']
+                ),
+                TRTL_COIN['SOLANA']['DECIMALS']
               ),
             }))
           }}
@@ -192,16 +141,18 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
 
         <p className='text-center text-zinc-400'>
           You&apos;ll get:&nbsp;
-          <span className='text-zinc-200'>{Math.floor(formatTokenAmount.fromChain(amounts.toGet, SOL_TOKEN_DECIMALS)).toLocaleString('en-US')}</span>
+          <span className='text-zinc-200'>
+            {Math.floor(formatTokenAmount.fromChain(amounts.toGet, TRTL_COIN['SOLANA']['DECIMALS'])).toLocaleString('en-US')}
+          </span>
           &nbsp;$TRTL on Solana
         </p>
 
         <p className='my-2 text-center text-xs text-zinc-400'>
           (based on ownership % from circulating supply)
           <br />
-          Cardano circulating: <span className='text-zinc-200'>{ADA_CIRCULATING.toLocaleString('en-US')}</span>
+          Cardano circulating: <span className='text-zinc-200'>{TRTL_COIN['CARDANO']['CIRCULATING'].toLocaleString('en-US')}</span>
           <br />
-          Solana circulating: <span className='text-zinc-200'>{SOL_CIRCULATING.toLocaleString('en-US')}</span>
+          Solana circulating: <span className='text-zinc-200'>{TRTL_COIN['SOLANA']['CIRCULATING'].toLocaleString('en-US')}</span>
         </p>
 
         <div className='my-2'>
@@ -211,13 +162,13 @@ const BridgeToSolanaModal = ({ isOpen, onClose, submitted }: { isOpen: boolean; 
         {/* <p className='mt-4 text-center text-xs text-zinc-400'>
           My Balance on Cardano:&nbsp;
           <span className='text-zinc-200'>
-            {Math.floor(formatTokenAmount.fromChain(amounts.balance, ADA_TOKEN_DECIMALS)).toLocaleString('en-US')}
+            {Math.floor(formatTokenAmount.fromChain(amounts.balance, TRTL_COIN['CARDANO']['DECIMALS'])).toLocaleString('en-US')}
           </span>
           &nbsp;$TRTL
           <br />
           Balance on Solana Bridge:&nbsp;
           <span className='text-zinc-200'>
-            {Math.floor(formatTokenAmount.fromChain(amounts.appBalance, SOL_TOKEN_DECIMALS)).toLocaleString('en-US')}
+            {Math.floor(formatTokenAmount.fromChain(amounts.appBalance, TRTL_COIN['SOLANA']['DECIMALS'])).toLocaleString('en-US')}
           </span>
           &nbsp;$TRTL
         </p> */}

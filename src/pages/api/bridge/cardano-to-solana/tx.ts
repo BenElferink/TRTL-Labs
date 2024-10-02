@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import blockfrost from '@/utils/blockfrost'
 // import { firestore } from '@/utils/firebase'
-import formatTokenAmount from '@/functions/formatTokenAmount'
-import { ADA_APP_ADDRESS, ADA_CIRCULATING, ADA_TOKEN_DECIMALS, ADA_TOKEN_ID, SOL_CIRCULATING, SOL_TOKEN_DECIMALS } from '@/constants'
+// import formatTokenAmount from '@/functions/formatTokenAmount'
+import { ADA_BRIDGE_APP_ADDRESS, TRTL_COIN } from '@/constants'
 
 export const config = {
   maxDuration: 300,
@@ -27,9 +27,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           outputs.forEach((outp) => {
             const to = outp.address
 
-            if (to === ADA_APP_ADDRESS) {
+            if (to === ADA_BRIDGE_APP_ADDRESS) {
               outp.amount.forEach(({ unit, quantity }) => {
-                if (unit === ADA_TOKEN_ID) {
+                if (unit === TRTL_COIN['CARDANO']['TOKEN_ID']) {
                   if (received[from]) {
                     received[from] += +quantity
                   } else {
@@ -70,8 +70,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
         // const solAmount = Math.floor(
         //   formatTokenAmount.toChain(
-        //     formatTokenAmount.fromChain(sentAmount / (ADA_CIRCULATING / SOL_CIRCULATING), ADA_TOKEN_DECIMALS),
-        //     SOL_TOKEN_DECIMALS
+        //     formatTokenAmount.fromChain(sentAmount / (TRTL_COIN['CARDANO']['CIRCULATING'] / TRTL_COIN['SOLANA']['CIRCULATING']), TRTL_COIN['CARDANO']['DECIMALS']),
+        //     TRTL_COIN['SOLANA']['DECIMALS']
         //   )
         // )
 

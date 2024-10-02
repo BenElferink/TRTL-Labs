@@ -3,6 +3,10 @@
     {
       "path": "/api/bridge/cardano-to-solana/cron",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/sidekick/cron",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

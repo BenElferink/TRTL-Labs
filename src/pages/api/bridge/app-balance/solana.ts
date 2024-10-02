@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
-import { SOL_APP_ADDRESS, SOL_NET, SOL_TOKEN_ID } from '@/constants'
+import { SOL_BRIDGE_APP_ADDRESS, SOL_NET, TRTL_COIN } from '@/constants'
 
 export const config = {
   maxDuration: 300,
@@ -26,8 +26,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<SolAppBalanceRe
       case 'GET': {
         const connection = new Connection(clusterApiUrl(SOL_NET), 'confirmed')
 
-        const appPublicKey = new PublicKey(SOL_APP_ADDRESS)
-        const tokenPublicKey = new PublicKey(SOL_TOKEN_ID)
+        const appPublicKey = new PublicKey(SOL_BRIDGE_APP_ADDRESS)
+        const tokenPublicKey = new PublicKey(TRTL_COIN['SOLANA']['TOKEN_ID'])
 
         const { value } = await connection.getParsedTokenAccountsByOwner(appPublicKey, { mint: tokenPublicKey })
         const tokenAmount = value[0]?.account?.data?.parsed?.info?.tokenAmount
