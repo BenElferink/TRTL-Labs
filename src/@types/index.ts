@@ -18,3 +18,12 @@ export interface DBBridgePayload {
   solAmount: number
   done: boolean
 }
+
+export interface DbMintPayload {
+  timestamp: number
+  address: string
+  amount: number
+  amountMinted?: number
+  didSend: boolean
+  didMint: boolean
+}

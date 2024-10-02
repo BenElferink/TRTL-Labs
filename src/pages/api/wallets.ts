@@ -12,7 +12,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const { method, query, body } = req;
 
   const client = await clientPromise;
-  const db = client.db('TRTL'); // Replace with your MongoDB database name
+  const db = client.db('TRTL');
   const collection = db.collection('turtle-syndicate-wallets');
 
   try {
@@ -97,7 +97,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       case 'DELETE': {
         const { id } = query;
-        console.log('DELETE API CALL - ID:',id)
 
         if (!!id && typeof id === 'string') {
           // Delete the document with the specified ID
