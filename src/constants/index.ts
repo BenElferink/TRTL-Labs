@@ -43,7 +43,7 @@ export const TRTL_LP = {
 
 export const SIDEKICK_NFT = {
   CARDANO: {
-    POLICY_ID: '',
+    POLICY_ID: 'df1a927fcf6c17d7faafdac0f8728fb2a20b509b82fd1d2b614d3ae3',
   },
   SOLANA: {},
 }
