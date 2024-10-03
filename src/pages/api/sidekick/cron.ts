@@ -49,7 +49,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
               console.log('found faulty TX, retrying now', txHash)
 
               try {
-                await axios.post('https://trtl-solana-bridge.vercel.app/api/sidekick/mint', { txHash })
+                await axios.post('https://trtl-labs.vercel.app/api/sidekick/mint', { txHash })
                 await sleep(2000)
               } catch (error) {
                 console.error(error)
