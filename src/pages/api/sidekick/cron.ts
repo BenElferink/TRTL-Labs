@@ -30,29 +30,29 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           txTime = Number(txTime)
 
           if (now - txTime < 2 * 60 * 60 * 1000) {
-            try {
-              const txHash = tx.tx_hash
-              const { empty, docs } = await collection.where('txHash', '==', txHash).get()
-              const { didSend, didMint, timestamp } = docs[0].data() as DbMintPayload
+            const txHash = tx.tx_hash
+            const { empty, docs } = await collection.where('txHash', '==', txHash).get()
+            const { didSend, didMint, timestamp } = docs[0].data() as DbMintPayload
 
-              let docNeedsAgain = false
-              if (
-                (!didMint && didSend && now - timestamp >= 60000) || // 1 minutes
-                (!didMint && !didSend && now - timestamp >= 300000) // 5 minutes
-              ) {
-                docNeedsAgain = true
-              }
+            let docNeedsAgain = false
+            if (
+              (!didMint && didSend && now - timestamp >= 60000) || // 1 minutes
+              (!didMint && !didSend && now - timestamp >= 300000) // 5 minutes
+            ) {
+              docNeedsAgain = true
+            }
 
-              const needTo = empty || docNeedsAgain
-              const { sentLp, mintAmount } = needTo ? await getTxInfo(txHash) : { sentLp: false, mintAmount: 0 }
+            const needTo = empty || docNeedsAgain
+            const { sentLp, mintAmount } = needTo ? await getTxInfo(txHash) : { sentLp: false, mintAmount: 0 }
 
-              if (needTo && sentLp && !!mintAmount) {
-                console.log('found faulty TX, retrying now', txHash)
+            if (needTo && sentLp && !!mintAmount) {
+              console.log('found faulty TX, retrying now', txHash)
 
+              try {
                 await axios.post('https://trtl-solana-bridge.vercel.app/api/sidekick/mint', { txHash })
                 await sleep(2000)
-              }
-            } catch (error) {}
+              } catch (error) {}
+            }
           }
         }
 
