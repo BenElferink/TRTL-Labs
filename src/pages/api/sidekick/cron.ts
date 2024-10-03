@@ -32,17 +32,17 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           if (now - txTime < 2 * 60 * 60 * 1000) {
             const txHash = tx.tx_hash
             const { empty, docs } = await collection.where('txHash', '==', txHash).get()
-            const { didSend, didMint, timestamp } = docs[0].data() as DbMintPayload
+            const { didSend, didMint, timestamp } = (docs[0]?.data() || {}) as DbMintPayload
 
-            let docNeedsAgain = false
+            let needTo = empty
             if (
-              (!didMint && didSend && now - timestamp >= 60000) || // 1 minutes
-              (!didMint && !didSend && now - timestamp >= 300000) // 5 minutes
+              !needTo &&
+              ((!didMint && didSend && now - timestamp >= 60000) || // 1 minutes
+                (!didMint && !didSend && now - timestamp >= 300000)) // 5 minutes
             ) {
-              docNeedsAgain = true
+              needTo = true
             }
 
-            const needTo = empty || docNeedsAgain
             const { sentLp, mintAmount } = needTo ? await getTxInfo(txHash) : { sentLp: false, mintAmount: 0 }
 
             if (needTo && sentLp && !!mintAmount) {
