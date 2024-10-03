@@ -112,10 +112,14 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
       toast.dismiss()
       toast.success('TX submitted!')
 
-      toast.loading('Minting NFT...')
-      await axios.post('/api/sidekick/mint', { txHash })
-      toast.dismiss()
-      toast.success('NFT minted!')
+      try {
+        toast.loading('Minting NFT...')
+        await axios.post('/api/sidekick/mint', { txHash })
+        toast.dismiss()
+        toast.success('NFT minted!')
+      } catch (error) {
+        toast.success('NFT will be minted soon!')
+      }
 
       onClose() // Close modal after minting
     } catch (e: any) {
