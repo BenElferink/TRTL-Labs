@@ -1,1 +1,1 @@
-# TRTL - Solana Bridge
+# TRTL - Labs

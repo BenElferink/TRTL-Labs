@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import axios from 'axios'
+import blockfrost from '@/utils/blockfrost'
 import { firestore } from '@/utils/firebase'
 import sleep from '@/functions/sleep'
-import { DbMintPayload } from '@/@types'
-import blockfrost from '@/utils/blockfrost'
-import { ADA_SIDEKICK_TEAM_ADDRESS } from '@/constants'
 import { getTxInfo } from './mint'
+import type { DbMintPayload } from '@/@types'
+import { ADA_SIDEKICK_TEAM_ADDRESS } from '@/constants'
 
 export const config = {
   maxDuration: 300,
@@ -51,7 +51,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
               try {
                 await axios.post('https://trtl-solana-bridge.vercel.app/api/sidekick/mint', { txHash })
                 await sleep(2000)
-              } catch (error) {}
+              } catch (error) {
+                console.error(error)
+              }
             }
           }
         }
