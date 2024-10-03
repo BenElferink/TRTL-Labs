@@ -3,6 +3,9 @@ import axios from 'axios'
 import { firestore } from '@/utils/firebase'
 import sleep from '@/functions/sleep'
 import { DbMintPayload } from '@/@types'
+import blockfrost from '@/utils/blockfrost'
+import { ADA_SIDEKICK_TEAM_ADDRESS } from '@/constants'
+import { getTxInfo } from './mint'
 
 export const config = {
   maxDuration: 300,
@@ -17,40 +20,43 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     switch (method) {
       case 'GET': {
-        const now = new Date().getTime()
-
         const collection = firestore.collection('turtle-sidekick-swaps')
-        const { docs } = await collection.get()
+        const txs = await blockfrost.addressesTransactionsAll(ADA_SIDEKICK_TEAM_ADDRESS)
+        const now = Date.now()
 
-        const swaps = docs.map((doc) => ({
-          ...doc.data(),
-          id: doc.id,
-        })) as (DbMintPayload & { id: string })[]
+        for await (const tx of txs) {
+          let txTime: string | number = String(tx.block_time)
+          while (txTime.length < 13) txTime = `${txTime}0`
+          txTime = Number(txTime)
 
-        const swapsThatNeedToMint = swaps.filter((doc) => !doc.didMint && doc.didSend && now - doc.timestamp >= 60000) // 1 minutes
-        const swapsThatNeedToDelete = swaps.filter((doc) => !doc.didMint && !doc.didSend && now - doc.timestamp >= 300000) // 5 minutes
-        const retry = swapsThatNeedToMint.concat(swapsThatNeedToDelete)
+          if (now - txTime < 2 * 60 * 60 * 1000) {
+            try {
+              const txHash = tx.tx_hash
+              const { empty, docs } = await collection.where('txHash', '==', txHash).get()
+              const { didSend, didMint, timestamp } = docs[0].data() as DbMintPayload
 
-        if (retry.length) {
-          console.warn(`found ${retry.length} swaps that need to mint`)
+              let docNeedsAgain = false
+              if (
+                (!didMint && didSend && now - timestamp >= 60000) || // 1 minutes
+                (!didMint && !didSend && now - timestamp >= 300000) // 5 minutes
+              ) {
+                docNeedsAgain = true
+              }
 
-          for await (const { txHash } of retry) {
-            await axios.post('https://trtl-solana-bridge.vercel.app/api/sidekick/mint', { txHash })
-            await sleep(2000)
+              const needTo = empty || docNeedsAgain
+              const { sentLp, mintAmount } = needTo ? await getTxInfo(txHash) : { sentLp: false, mintAmount: 0 }
+
+              if (needTo && sentLp && !!mintAmount) {
+                console.log('found faulty TX, retrying now', txHash)
+
+                await axios.post('https://trtl-solana-bridge.vercel.app/api/sidekick/mint', { txHash })
+                await sleep(2000)
+              }
+            } catch (error) {}
           }
         }
 
-        // if (swapsThatNeedToDelete.length) {
-        //   const b = firestore.batch()
-
-        //   swapsThatNeedToDelete.forEach(({ id }) => {
-        //     b.delete(collection.doc(id))
-        //   })
-
-        //   await b.commit()
-        // }
-
-        return res.status(200).json({ swapsThatNeedToMint, swapsThatNeedToDelete })
+        return res.status(204).end()
       }
 
       default: {

@@ -29,7 +29,7 @@ type InputIutput = {
   }
 }
 
-const getTxInfo = async (txHash: string) => {
+export const getTxInfo = async (txHash: string) => {
   const allowedUnits = ['lovelace', TRTL_LP['CARDANO']['MINSWAP_V1_TOKEN_ID'], TRTL_LP['CARDANO']['MINSWAP_V2_TOKEN_ID']]
   const allowedTargets = [ADA_SIDEKICK_TEAM_ADDRESS, ADA_DEV_1_ADDRESS, ADA_DEV_2_ADDRESS, ADA_SIDEKICK_APP_ADDRESS]
 
