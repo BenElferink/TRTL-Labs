@@ -21,9 +21,10 @@ export interface DBBridgePayload {
 
 export interface DbMintPayload {
   timestamp: number
-  address: string
-  amount: number
-  amountMinted?: number
+  txHash: string
   didSend: boolean
   didMint: boolean
+  address?: string
+  amountToMint?: number
+  amountMinted?: number
 }

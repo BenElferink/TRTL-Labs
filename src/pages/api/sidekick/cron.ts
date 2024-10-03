@@ -27,14 +27,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           id: doc.id,
         })) as (DbMintPayload & { id: string })[]
 
-        const swapsThatNeedToMint = swaps.filter((doc) => !doc.didMint && doc.didSend && now - doc.timestamp >= 300000) // 5 minutes
-        const swapsThatNeedToDelete = swaps.filter((doc) => !doc.didMint && !doc.didSend && now - doc.timestamp >= 900000) // 15 minutes
+        const swapsThatNeedToMint = swaps.filter((doc) => !doc.didMint && doc.didSend && now - doc.timestamp >= 60000) // 1 minutes
+        const swapsThatNeedToDelete = swaps.filter((doc) => !doc.didMint && !doc.didSend && now - doc.timestamp >= 300000) // 5 minutes
+        const retry = swapsThatNeedToMint.concat(swapsThatNeedToDelete)
 
-        if (swapsThatNeedToMint.length) {
-          console.warn(`found ${swapsThatNeedToMint.length} swaps that need to mint`)
+        if (retry.length) {
+          console.warn(`found ${retry.length} swaps that need to mint`)
 
-          for await (const { id } of swapsThatNeedToMint) {
-            await axios.post('https://turtle-solana-bridge.vercel.app/api/sidekick/mint', { docId: id })
+          for await (const { txHash } of retry) {
+            await axios.post('https://trtl-solana-bridge.vercel.app/api/sidekick/mint', { txHash })
             await sleep(2000)
           }
         }

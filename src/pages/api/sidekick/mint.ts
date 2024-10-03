@@ -3,14 +3,97 @@ import { BlockfrostProvider, ForgeScript, MeshWallet, Mint, Transaction } from '
 import { firebase, firestore } from '@/utils/firebase'
 import blockfrost from '@/utils/blockfrost'
 import formatHex from '@/functions/formatHex'
-import { BLOCKFROST_API_KEY, ADA_SIDEKICK_APP_SECRET_KEY, SIDEKICK_NFT } from '@/constants'
-import { DbMintPayload } from '@/@types'
+import formatTokenAmount from '@/functions/formatTokenAmount'
+import type { DbMintPayload } from '@/@types'
+import {
+  BLOCKFROST_API_KEY,
+  ADA_SIDEKICK_APP_SECRET_KEY,
+  SIDEKICK_NFT,
+  ADA_SIDEKICK_TEAM_ADDRESS,
+  ADA_DEV_1_ADDRESS,
+  ADA_DEV_2_ADDRESS,
+  ADA_SIDEKICK_APP_ADDRESS,
+  TRTL_LP,
+} from '@/constants'
 
 export const config = {
   maxDuration: 300,
   api: {
     responseLimit: false,
   },
+}
+
+type InputIutput = {
+  [address: string]: {
+    [unit: string]: number
+  }
+}
+
+const getTxInfo = async (txHash: string) => {
+  const allowedUnits = ['lovelace', TRTL_LP['CARDANO']['MINSWAP_V1_TOKEN_ID'], TRTL_LP['CARDANO']['MINSWAP_V2_TOKEN_ID']]
+  const allowedTargets = [ADA_SIDEKICK_TEAM_ADDRESS, ADA_DEV_1_ADDRESS, ADA_DEV_2_ADDRESS, ADA_SIDEKICK_APP_ADDRESS]
+
+  const { inputs, outputs } = await blockfrost.txsUtxos(txHash)
+
+  const sent: InputIutput = {}
+  const received: InputIutput = {}
+
+  inputs.forEach((inp) => {
+    const from = inp.address
+    if (!sent[from]) sent[from] = {}
+
+    inp.amount.forEach(({ unit, quantity }) => {
+      if (allowedUnits.includes(unit) || !allowedUnits.length) {
+        const num = Number(quantity)
+
+        if (!sent[from][unit]) {
+          sent[from][unit] = num
+        } else {
+          sent[from][unit] += num
+        }
+      }
+    })
+  })
+
+  const sentEntries = Object.entries(sent)
+
+  if (!sentEntries.length) throw new Error('?? no inputs')
+  if (sentEntries.length > 1) throw new Error('?? too many senders')
+
+  outputs.forEach((outp) => {
+    const to = outp.address
+
+    if (allowedTargets.includes(to) || !allowedTargets.length) {
+      if (!received[to]) received[to] = {}
+
+      outp.amount.forEach(({ unit, quantity }) => {
+        if (allowedUnits.includes(unit) || !allowedUnits.length) {
+          const num = Number(quantity)
+
+          if (!received[to][unit]) {
+            received[to][unit] = num
+          } else {
+            received[to][unit] += num
+          }
+        }
+      })
+    }
+  })
+
+  const sentFrom = sentEntries[0][0]
+  let sentLp = false
+  let mintAmount = 0
+
+  allowedTargets.forEach((addr) => {
+    Object.entries(received[addr]).forEach(([unit, num]) => {
+      if (unit === allowedUnits[0]) mintAmount += num
+      if (unit === allowedUnits[1] || unit === allowedUnits[2]) sentLp = true
+    })
+  })
+
+  mintAmount = formatTokenAmount.fromChain(mintAmount, 6) / 10
+
+  return { mintAmount, sentLp, sentFrom }
 }
 
 const getRandomDoc = async (
@@ -47,28 +130,68 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     switch (method) {
       case 'POST': {
-        const { docId } = body
-        const { FieldValue } = firebase.firestore
+        const { txHash: txFromBody } = body
+
+        const swapCollection = firestore.collection('turtle-sidekick-swaps')
+        const swapDocs = await swapCollection.where('txHash', '==', txFromBody).get()
+
+        let data: DbMintPayload | undefined
+        let docId = ''
+
+        if (swapDocs.empty) {
+          const dbPayload: DbMintPayload = {
+            timestamp: Date.now(),
+            txHash: txFromBody,
+            didSend: false,
+            didMint: false,
+          }
+
+          const { id } = await swapCollection.add(dbPayload)
+          const doc = await swapCollection.doc(id).get()
+
+          data = doc.data() as DbMintPayload
+          docId = id
+        } else {
+          data = swapDocs.docs[0].data() as DbMintPayload
+          docId = swapDocs.docs[0].id
+        }
+
+        if (!data) throw new Error('?? no data')
+        if (!docId) throw new Error('?? no doc id')
+
+        const { didMint, didSend } = data
+
+        if (didMint) return res.status(400).end('Already completed mint for this TX')
+
+        if (!didSend) {
+          const { sentFrom, sentLp, mintAmount } = await getTxInfo(txFromBody)
+
+          if (!sentLp) return res.status(400).end('User did not send LP')
+          if (!mintAmount) return res.status(400).end('User does not have mint amount')
+
+          await swapCollection.doc(docId).update({
+            didSend: true,
+            address: sentFrom,
+            amountToMint: mintAmount,
+          })
+
+          const doc = await swapCollection.doc(docId).get()
+
+          data = doc.data() as DbMintPayload
+        }
+
+        const { address: recipientAddress, amountToMint, amountMinted } = data
+        const amountRemaining = (amountToMint || 0) - (amountMinted || 0)
+
+        if (!amountRemaining) return res.status(400).end('User does not have remaining mint amount')
 
         const assetCollection = firestore.collection('turtle-sidekick-assets')
         const assetDocs = await assetCollection.get()
 
-        const swapCollection = firestore.collection('turtle-sidekick-swaps')
-        const swapDoc = await swapCollection.doc(docId).get()
-
-        if (!swapDoc.exists) return res.status(400).end('Doc ID is invalid')
-
-        const { address: recipientAddress, amount: amountToMint, amountMinted, didSend, didMint } = swapDoc.data() as DbMintPayload
-        const amountRemaining = amountToMint - (amountMinted || 0)
-
-        if (!didSend) return res.status(400).end('User did not complete deposit TX')
-        if (didMint) return res.status(400).end('Already completed mint for this record')
-        if (!amountToMint || !amountRemaining) return res.status(400).end('User does not have mint amount')
-
         const mintItems: Mint[] = []
         const usedDocIds: string[] = []
 
-        for (let i = 0; i < Math.min(amountRemaining, 10); i++) {
+        for (let i = 0; i < Math.min(amountRemaining, 2); i++) {
           const { id, data } = await getRandomDoc(assetDocs, usedDocIds)
 
           const payload: Mint = {
@@ -102,27 +225,24 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
         mintItems.forEach((item) => tx.mintAsset(script, item))
 
+        console.log('building TX')
         const unsigTx = await tx.build()
+        console.log('submitting TX')
         const sigTx = await wallet.signTx(unsigTx)
+        console.log('signing TX')
         const txHash = await wallet.submitTx(sigTx)
 
-        console.log(`updating doc in DB: ${swapDoc.id}`)
+        const { FieldValue } = firebase.firestore
 
-        await swapCollection.doc(swapDoc.id).update({
-          amountMinted: FieldValue.increment(mintItems.length),
+        await swapCollection.doc(docId).update({
           didMint: (amountMinted || 0) + mintItems.length === amountToMint,
+          amountMinted: FieldValue.increment(mintItems.length),
         })
 
-        console.log(`updated doc in DB: ${swapDoc.id}`)
-
         if (usedDocIds.length) {
-          console.log(`deleting batch (${usedDocIds.length}) from DB`)
-
           const batch = firestore.batch()
           usedDocIds.forEach((id) => batch.delete(assetCollection.doc(id)))
           await batch.commit()
-
-          console.log(`deleted batch (${usedDocIds.length}) from DB`)
         }
 
         return res.status(200).json({ txHash })

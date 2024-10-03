@@ -18,9 +18,6 @@ import txConfirmation from '@/functions/txConfirmation'
 import Loader from '../Loader'
 import ImageCarousel from '../ImageCarousel'
 import { ADA_SIDEKICK_TEAM_ADDRESS, TRTL_LP, ADA_SIDEKICK_APP_ADDRESS, ADA_DEV_1_ADDRESS, ADA_DEV_2_ADDRESS } from '@/constants'
-import { DbMintPayload } from '@/@types'
-import { firestore } from '@/utils/firebase'
-import { FetchedTimestampResponse } from '@/pages/api/timestamp'
 
 interface MintModalProps {
   isOpen: boolean
@@ -69,27 +66,12 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
     [isSolSelected, isAdaV1Selected, lpTokensSolNeeded, lpTokensNeededV1, lpTokensNeededV2]
   )
 
-  console.log('lpTokensNeeded', lpTokensNeeded)
-
   const buildTx = async () => {
     if (!connected) return setError('Wallet not connected. Please connect your wallet.')
     if (isSolSelected) return setError('For Solana, please create a ticket in Discord.')
 
-    const dbPayload: DbMintPayload = {
-      timestamp: (await axios.get<FetchedTimestampResponse>('/api/timestamp')).data.now,
-      address: (await wallet.getUsedAddress()).toBech32(),
-      amount: mintAmount,
-      didSend: false,
-      didMint: false,
-    }
-
-    if (!dbPayload.address) return setError('Could not get used-address of wallet.')
-
     setLoading(true)
     setError('')
-
-    const collection = firestore.collection('turtle-sidekick-swaps')
-    const { id: docId } = await collection.add(dbPayload)
 
     try {
       const adaDecimals = 6
@@ -130,10 +112,8 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
       toast.dismiss()
       toast.success('TX submitted!')
 
-      await collection.doc(docId).update({ didSend: true })
-
       toast.loading('Minting NFT...')
-      await axios.post('/api/sidekick/mint', { docId })
+      await axios.post('/api/sidekick/mint', { txHash })
       toast.dismiss()
       toast.success('NFT minted!')
 
