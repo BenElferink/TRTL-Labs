@@ -131,7 +131,7 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
 
       if (msg === 'txBuildResult error:') {
         // No context in error = insufficient funds
-        // See issue: https://github.com/MeshJS/mesh/issues/299
+        // See issue: https://github.com/MeshJS/mesh/issues/307
         setError('txBuildResult error: Insufficient funds')
       } else {
         setError(msg)
