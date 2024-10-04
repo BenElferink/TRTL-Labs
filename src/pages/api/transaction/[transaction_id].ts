@@ -14,6 +14,8 @@ export type TransactionResponse = components['schemas']['tx_content']
 const handler = async (req: NextApiRequest, res: NextApiResponse<TransactionResponse>) => {
   const { method, query } = req
 
+  console.log('query', query)
+
   const transactionId = query.transaction_id?.toString()
 
   if (!transactionId) {
