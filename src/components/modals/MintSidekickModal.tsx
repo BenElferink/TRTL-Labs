@@ -118,6 +118,7 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
         toast.dismiss()
         toast.success('NFT minted!')
       } catch (error) {
+        toast.dismiss()
         toast.success('NFT will be minted soon!')
       }
 
