@@ -85,7 +85,7 @@ export const getTxInfo = async (txHash: string) => {
   let mintAmount = 0
 
   allowedTargets.forEach((addr) => {
-    Object.entries(received[addr]).forEach(([unit, num]) => {
+    Object.entries(received[addr] || {}).forEach(([unit, num]) => {
       if (unit === allowedUnits[0]) mintAmount += num
       if (unit === allowedUnits[1] || unit === allowedUnits[2]) sentLp = true
     })
