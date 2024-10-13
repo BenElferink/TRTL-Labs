@@ -1,9 +1,9 @@
 'use client'
+import type { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { useEffect, useState } from 'react'
-import clientPromise from '@/utils/mongo'
+import { firestore } from '@/utils/firebase'
 import Button from '@/components/Button'
 import ConnectWallets from '@/components/ConnectWallets'
 import BridgeToSolanaModal from '@/components/modals/BridgeToSolanaModal'
@@ -14,22 +14,11 @@ export const getServerSideProps: GetServerSideProps<DBWalletPayload & { docId: s
   const id = (query.id || '') as string
 
   if (!!id) {
-    try {
-      const client = await clientPromise
-      const db = client.db('TRTL')
-      const collection = db.collection('turtle-syndicate-wallets')
-      const doc = await collection.findOne({ _Id: id })
+    const collection = firestore.collection('turtle-syndicate-wallets')
+    const doc = await collection.doc(id).get()
 
-      if (doc) {
-        const transformedDoc: DBWalletPayload = {
-          cardano: doc.cardano || '',
-          solana: doc.solana || '',
-        }
-
-        return { props: { ...transformedDoc, docId: id } }
-      }
-    } catch (error) {
-      console.error('Failed to fetch document:', error)
+    if (doc.exists) {
+      return { props: { ...(doc.data() as DBWalletPayload), docId: id } }
     }
   }
 

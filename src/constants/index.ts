@@ -2,8 +2,6 @@ export const BLOCKFROST_API_KEY = process.env.BLOCKFROST_API_KEY || ''
 export const TAPTOOLS_API_KEY = process.env.TAPTOOLS_API_KEY || ''
 export const KOIOS_API_KEY = process.env.NEXT_PUBLIC_KOIOS_API_KEY || ''
 
-export const MONGODB_URI = process.env.MONGODB_URI || ''
-
 export const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || ''
 export const FIREBASE_APP_ID = process.env.FIREBASE_APP_ID || ''
 export const FIREBASE_AUTH_DOMAIN = process.env.FIREBASE_AUTH_DOMAIN || ''

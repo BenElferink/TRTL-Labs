@@ -1,122 +1,112 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import clientPromise from '@/utils/mongo';
+import type { NextApiRequest, NextApiResponse } from 'next'
+import { firebase, firestore } from '@/utils/firebase'
 
 export const config = {
   maxDuration: 300,
   api: {
     responseLimit: false,
   },
-};
+}
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const { method, query, body } = req;
+  const { method, query, body } = req
 
-  const client = await clientPromise;
-  const db = client.db('TRTL');
-  const collection = db.collection('turtle-syndicate-wallets');
+  const collection = firestore.collection('turtle-syndicate-wallets')
 
   try {
     switch (method) {
       case 'GET': {
-        // Fetch all documents from the collection
-        const docs = await collection.find({}).toArray();
-        const mapped = docs.map((d) => ({ ...d, id: d._id }));
-        
+        const { docs } = await collection.get()
+        const mapped = docs.map((d) => ({ ...d.data(), id: d.id }))
+
         return res.status(200).json({
           count: mapped.length,
           items: mapped,
-        });
+        })
       }
 
       case 'POST': {
-        const { id } = query;
-        const { cardano, solana } = body;
+        const { id } = query
+        const { cardano, solana } = body
 
         if (!!cardano && !!solana) {
-          // Find documents matching both `cardano` and `solana` fields
-          const docs = await collection.find({ cardano, solana }).toArray();
-          console.log(docs)
+          const { docs } = await collection.where('cardano', '==', cardano).where('solana', '==', solana).get()
 
           if (docs.length) {
             return res.status(200).json({
               count: docs.length,
-              items: docs.map((d) => ({ ...d, id: d._id })),
-            });
+              items: docs.map((d) => ({ ...d.data(), id: d.id })),
+            })
           }
         } else if (!!cardano) {
-          // Find documents matching only the `cardano` field
-          const docs = await collection.find({ cardano }).toArray();
+          const { docs } = await collection.where('cardano', '==', cardano).get()
 
           if (docs.length) {
             return res.status(200).json({
               count: docs.length,
-              items: docs.map((d) => ({ ...d, id: d._id })),
-            });
+              items: docs.map((d) => ({ ...d.data(), id: d.id })),
+            })
           }
         } else if (!!solana) {
-          // Find documents matching only the `solana` field
-          const docs = await collection.find({ solana }).toArray();
+          const { docs } = await collection.where('solana', '==', solana).get()
 
           if (docs.length) {
             return res.status(200).json({
               count: docs.length,
-              items: docs.map((d) => ({ ...d, id: d._id })),
-            });
+              items: docs.map((d) => ({ ...d.data(), id: d.id })),
+            })
           }
         }
 
         // for mobile wallets
         if (!!id) {
-          const docId = id as string;
+          const docId = id as string
+          const doc = await collection.doc(docId).get()
 
-          // Find the document by ID and update it
-          const updateParams: Partial<{ cardano: string; solana: string }> = {};
-          if (cardano) updateParams['cardano'] = cardano;
-          if (solana) updateParams['solana'] = solana;
+          if (!doc.exists) return res.status(400).end('Bad ID')
 
-          const result = await collection.findOneAndUpdate(
-            { _Id: docId },
-            { $set: updateParams }
-          );
+          const updateParams: firebase.firestore.UpdateData = {}
 
-          if (!result?.value) return res.status(400).end('Bad ID');
+          if (cardano) updateParams['cardano'] = cardano
+          if (solana) updateParams['solana'] = solana
+
+          await collection.doc(docId).update(updateParams)
 
           return res.status(201).json({
             count: 1,
-            items: [{ id: result.value._id, cardano, solana }],
-          });
+            items: [{ id: doc.id, cardano, solana }],
+          })
         }
 
-        // Add a new document to the collection
-        const result = await collection.insertOne({ cardano, solana },);
+        const doc = await collection.add({ cardano, solana })
+
         return res.status(201).json({
           count: 1,
-          items: [{ id: result.insertedId, cardano, solana }],
-        });
+          items: [{ id: doc.id, cardano, solana }],
+        })
       }
 
       case 'DELETE': {
-        const { id } = query;
+        const { id } = query
 
         if (!!id && typeof id === 'string') {
-          // Delete the document with the specified ID
-          await collection.deleteOne({ _Id: id });
+          await collection.doc(id).delete()
         }
 
-        return res.status(204).end();
+        return res.status(204).end()
       }
 
       default: {
-        res.setHeader('Allow', 'GET');
-        res.setHeader('Allow', 'POST');
-        res.setHeader('Allow', 'DELETE');
-        return res.status(405).end();
+        res.setHeader('Allow', 'GET')
+        res.setHeader('Allow', 'POST')
+        res.setHeader('Allow', 'DELETE')
+        return res.status(405).end()
       }
     }
   } catch (error) {
-    console.error(error);
-    return res.status(500).end();
+    console.error(error)
+    return res.status(500).end()
   }
-};
+}
 
-export default handler;
+export default handler
