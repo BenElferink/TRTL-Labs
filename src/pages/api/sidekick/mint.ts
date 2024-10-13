@@ -58,7 +58,6 @@ export const getTxInfo = async (txHash: string) => {
   const sentEntries = Object.entries(sent)
 
   if (!sentEntries.length) throw new Error('?? no inputs')
-  if (sentEntries.length > 1) throw new Error('?? too many senders')
 
   outputs.forEach((outp) => {
     const to = outp.address
@@ -80,14 +79,22 @@ export const getTxInfo = async (txHash: string) => {
     }
   })
 
-  const sentFrom = sentEntries[0][0]
+  let sentFrom = ''
   let sentLp = false
   let mintAmount = 0
 
   allowedTargets.forEach((addr) => {
     Object.entries(received[addr] || {}).forEach(([unit, num]) => {
-      if (unit === allowedUnits[0]) mintAmount += num
-      if (unit === allowedUnits[1] || unit === allowedUnits[2]) sentLp = true
+      if (unit === allowedUnits[0]) {
+        mintAmount += num
+      }
+
+      if (unit === allowedUnits[1] || unit === allowedUnits[2]) {
+        if (!!sentFrom) throw new Error('?? too many senders')
+
+        sentLp = true
+        sentFrom = addr
+      }
     })
   })
 
