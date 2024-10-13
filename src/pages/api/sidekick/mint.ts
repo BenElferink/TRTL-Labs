@@ -79,7 +79,15 @@ export const getTxInfo = async (txHash: string) => {
     }
   })
 
-  let sentFrom = ''
+  const sentFrom = sentEntries.find((x) => {
+    const sent = Object.entries(x[1])
+    const found = sent.find(([unit]) => [allowedUnits[1], allowedUnits[2]].includes(unit))
+
+    return !!found
+  })?.[0]
+
+  if (!sentFrom) throw new Error('?? no sender')
+
   let sentLp = false
   let mintAmount = 0
 
@@ -90,10 +98,7 @@ export const getTxInfo = async (txHash: string) => {
       }
 
       if (unit === allowedUnits[1] || unit === allowedUnits[2]) {
-        if (!!sentFrom) throw new Error('?? too many senders')
-
         sentLp = true
-        sentFrom = addr
       }
     })
   })
@@ -167,7 +172,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         if (!docId) throw new Error('?? no doc id')
 
         const { didMint, didSend } = data
-
+        
         if (didMint) return res.status(400).end('Already completed mint for this TX')
 
         if (!didSend) {
