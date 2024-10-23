@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import toast from 'react-hot-toast'
-import axios from 'axios'
-import { Transaction } from '@meshsdk/core'
-import { useWallet } from '@meshsdk/react'
-import { XMarkIcon } from '@heroicons/react/24/solid'
+import { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
+import axios from 'axios';
+import { Transaction } from '@meshsdk/core';
+import { useWallet } from '@meshsdk/react';
+import { XMarkIcon } from '@heroicons/react/24/solid';
 import {
   fetchAssetPrice,
   calculateRequiredADALPTokensV1,
@@ -11,13 +11,13 @@ import {
   calculateRequiredSOLLPTokens,
   fetchTotalADALPTokens,
   fetchTrtlPoolData,
-} from '@/functions/dynamicPricingLP'
-import { formatNumber } from '@/functions/formatNumber'
-import formatTokenAmount from '@/functions/formatTokenAmount'
-import txConfirmation from '@/functions/txConfirmation'
-import Loader from '../Loader'
-import ImageCarousel from '../ImageCarousel'
-import { ADA_SIDEKICK_TEAM_ADDRESS, TRTL_LP, ADA_SIDEKICK_APP_ADDRESS, ADA_DEV_1_ADDRESS, ADA_DEV_2_ADDRESS } from '@/constants'
+} from '@/functions/dynamicPricingLP';
+import { formatNumber } from '@/functions/formatNumber';
+import formatTokenAmount from '@/functions/formatTokenAmount';
+import txConfirmation from '@/functions/txConfirmation';
+import Loader from '../Loader';
+import ImageCarousel from '../ImageCarousel';
+import { ADA_SIDEKICK_TEAM_ADDRESS, TRTL_LP, ADA_SIDEKICK_APP_ADDRESS, ADA_DEV_1_ADDRESS, ADA_DEV_2_ADDRESS } from '@/constants';
 
 interface MintModalProps {
   isOpen: boolean
@@ -25,11 +25,11 @@ interface MintModalProps {
 }
 
 const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
-  const { wallet, connected } = useWallet()
+  const { wallet, connected } = useWallet();
 
-  const [lpTokensNeededV1, setLPTokensNeededV1] = useState<number>(0)
-  const [lpTokensNeededV2, setLPTokensNeededV2] = useState<number>(0)
-  const [lpTokensSolNeeded, setLPTokensSolNeeded] = useState<number>(0)
+  const [lpTokensNeededV1, setLPTokensNeededV1] = useState<number>(0);
+  const [lpTokensNeededV2, setLPTokensNeededV2] = useState<number>(0);
+  const [lpTokensSolNeeded, setLPTokensSolNeeded] = useState<number>(0);
 
   useEffect(() => {
     ;(async () => {
@@ -38,23 +38,23 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
         fetchTrtlPoolData('v1'),
         fetchTrtlPoolData('v2'),
         fetchTotalADALPTokens(),
-      ])
+      ]);
 
-      const { v1: adaLpTokensV1, v2: adaLpTokensV2 } = totalLpTokens || {}
+      const { v1: adaLpTokensV1, v2: adaLpTokensV2 } = totalLpTokens || {};
 
       if (adaprice && adaTvlV1 && adaTvlV2 && adaLpTokensV1 && adaLpTokensV2) {
-        setLPTokensNeededV1(Math.ceil(calculateRequiredADALPTokensV1(adaprice, adaTvlV1, adaLpTokensV1)))
-        setLPTokensNeededV2(Math.ceil(calculateRequiredADALPTokensV2(adaprice, adaTvlV2, adaLpTokensV2)))
-        setLPTokensSolNeeded(Math.ceil(await calculateRequiredSOLLPTokens()))
+        setLPTokensNeededV1(Math.ceil(calculateRequiredADALPTokensV1(adaprice, adaTvlV1, adaLpTokensV1)));
+        setLPTokensNeededV2(Math.ceil(calculateRequiredADALPTokensV2(adaprice, adaTvlV2, adaLpTokensV2)));
+        setLPTokensSolNeeded(Math.ceil(await calculateRequiredSOLLPTokens()));
       }
-    })()
-  }, [])
+    })();
+  }, []);
 
-  const [isSolSelected, setIsSolSelected] = useState(true)
-  const [isAdaV1Selected, setIsAdaV1Selected] = useState(true)
-  const [mintAmount, setMintAmount] = useState(0)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [isSolSelected, setIsSolSelected] = useState(true);
+  const [isAdaV1Selected, setIsAdaV1Selected] = useState(true);
+  const [mintAmount, setMintAmount] = useState(0);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const lpTokensNeeded = useMemo(
     () =>
@@ -64,18 +64,18 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
         ? lpTokensNeededV1 // ADA V1 LP is selected
         : lpTokensNeededV2, // ADA V2 LP is selected
     [isSolSelected, isAdaV1Selected, lpTokensSolNeeded, lpTokensNeededV1, lpTokensNeededV2]
-  )
+  );
 
   const buildTx = async () => {
-    if (!connected) return setError('Wallet not connected. Please connect your wallet.')
-    if (isSolSelected) return setError('For Solana, please create a ticket in Discord.')
+    if (!connected) return setError('Wallet not connected. Please connect your wallet.');
+    if (isSolSelected) return setError('For Solana, please create a ticket in Discord.');
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
-      const adaDecimals = 6
-      const lpTokenId = isAdaV1Selected ? TRTL_LP['CARDANO']['MINSWAP_V1_TOKEN_ID'] : TRTL_LP['CARDANO']['MINSWAP_V2_TOKEN_ID']
+      const adaDecimals = 6;
+      const lpTokenId = isAdaV1Selected ? TRTL_LP['CARDANO']['MINSWAP_V1_TOKEN_ID'] : TRTL_LP['CARDANO']['MINSWAP_V2_TOKEN_ID'];
 
       const tx = new Transaction({ initiator: wallet })
         // team
@@ -93,71 +93,71 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
         .sendLovelace({ address: ADA_DEV_1_ADDRESS }, String(formatTokenAmount.toChain(mintAmount * 2, adaDecimals)))
         .sendLovelace({ address: ADA_DEV_2_ADDRESS }, String(formatTokenAmount.toChain(mintAmount * 2, adaDecimals)))
         // mint app
-        .sendLovelace({ address: ADA_SIDEKICK_APP_ADDRESS }, String(formatTokenAmount.toChain(mintAmount * 2, adaDecimals)))
+        .sendLovelace({ address: ADA_SIDEKICK_APP_ADDRESS }, String(formatTokenAmount.toChain(mintAmount * 2, adaDecimals)));
 
-      toast.loading('Building TX')
-      const unsignedTx = await tx.build()
+      toast.loading('Building TX');
+      const unsignedTx = await tx.build();
 
-      toast.dismiss()
-      toast.loading('Awaiting TX signature')
-      const signedTx = await wallet?.signTx(unsignedTx)
+      toast.dismiss();
+      toast.loading('Awaiting TX signature');
+      const signedTx = await wallet?.signTx(unsignedTx);
 
-      toast.dismiss()
-      toast.loading('Submitting TX')
-      const txHash = await wallet?.submitTx(signedTx as string)
+      toast.dismiss();
+      toast.loading('Submitting TX');
+      const txHash = await wallet?.submitTx(signedTx as string);
 
-      toast.dismiss()
-      toast.loading('Awaiting confirmation')
-      await txConfirmation(txHash as string)
-      toast.dismiss()
-      toast.success('TX submitted!')
+      toast.dismiss();
+      toast.loading('Awaiting confirmation');
+      await txConfirmation(txHash as string);
+      toast.dismiss();
+      toast.success('TX submitted!');
 
       try {
-        toast.loading('Minting NFT...')
-        await axios.post('/api/sidekick/mint', { txHash })
-        toast.dismiss()
-        toast.success('NFT minted!')
+        toast.loading('Minting NFT...');
+        await axios.post('/api/sidekick/mint', { txHash });
+        toast.dismiss();
+        toast.success('NFT minted!');
       } catch (error) {
-        toast.dismiss()
-        toast.success('NFT will be minted soon!')
+        toast.dismiss();
+        toast.success('NFT will be minted soon!');
       }
 
-      onClose() // Close modal after minting
+      onClose(); // Close modal after minting
     } catch (e: any) {
-      console.error(e)
-      const msg = (e?.message || e?.info || e?.toString() || 'Minting failed. Please contact us.').trim()
+      console.error(e);
+      const msg = (e?.message || e?.info || e?.toString() || 'Minting failed. Please contact us.').trim();
 
-      toast.dismiss()
-      toast.error(`ERROR: ${msg}`)
+      toast.dismiss();
+      toast.error(`ERROR: ${msg}`);
 
       if (msg === 'txBuildResult error:') {
         // No context in error = insufficient funds
         // See issue: https://github.com/MeshJS/mesh/issues/307
-        setError('txBuildResult error: Insufficient funds')
+        setError('txBuildResult error: Insufficient funds');
       } else {
-        setError(msg)
+        setError(msg);
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const num = Number(e.target.value)
+    const num = Number(e.target.value);
 
     if (num >= 0) {
-      setMintAmount(num)
-      setError('')
+      setMintAmount(num);
+      setError('');
     } else {
-      setMintAmount(0)
-      setError('Mint amount cannot be negative.')
+      setMintAmount(0);
+      setError('Mint amount cannot be negative.');
     }
-  }
+  };
 
-  const toggleLPType = () => setIsSolSelected(!isSolSelected)
-  const toggleAdaVersion = () => setIsAdaV1Selected(!isAdaV1Selected)
-  const incrementAmount = () => setMintAmount((prev) => (prev !== null ? prev + 1 : 1))
-  const decrementAmount = () => setMintAmount((prev) => (prev !== null && prev > 0 ? prev - 1 : 0))
+  const toggleLPType = () => setIsSolSelected(!isSolSelected);
+  const toggleAdaVersion = () => setIsAdaV1Selected(!isAdaV1Selected);
+  const incrementAmount = () => setMintAmount((prev) => (prev !== null ? prev + 1 : 1));
+  const decrementAmount = () => setMintAmount((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
 
   return (
     <div
@@ -241,7 +241,7 @@ const MintSidekickModal = ({ isOpen, onClose }: MintModalProps) => {
         </section>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default MintSidekickModal
+export default MintSidekickModal;

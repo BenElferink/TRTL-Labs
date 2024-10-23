@@ -19,13 +19,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint-fix": "next lint --fix"
   },
   "dependencies": {
     "@blockfrost/blockfrost-js": "^5.5.0",
     "@heroicons/react": "^2.1.5",
-    "@meshsdk/core": "^1.7.8",
-    "@meshsdk/react": "^1.7.8",
+    "@meshsdk/core": "^1.7.9",
+    "@meshsdk/react": "^1.7.9",
     "@solana/spl-token": "^0.4.6",
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-react": "^0.15.35",
@@ -33,22 +34,21 @@
     "@solana/wallet-adapter-wallets": "^0.19.32",
     "@solana/web3.js": "^1.93.1",
     "axios": "^1.7.7",
-    "csvtojson": "^2.0.10",
-    "firebase": "^10.14.1",
-    "next": "^14.2.15",
+    "firebase": "^11.0.1",
+    "next": "^15.0.1",
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1"
   },
   "devDependencies": {
-    "@types/node": "22.7.5",
-    "@types/react": "18.3.11",
+    "@types/node": "22.7.9",
+    "@types/react": "18.3.12",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
-    "eslint-config-next": "14.2.15",
+    "eslint-config-next": "15.0.1",
     "postcss": "^8",
-    "tailwindcss": "^3.4.13",
+    "tailwindcss": "^3.4.14",
     "typescript": "5.6.3"
   }
 }

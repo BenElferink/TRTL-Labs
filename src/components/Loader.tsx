@@ -1,5 +1,5 @@
 const Loader = (props: { withLabel?: boolean; label?: string }) => {
-  const { withLabel = false, label = 'Loading' } = props
+  const { withLabel = false, label = 'Loading' } = props;
 
   return (
     <div role='status' className='flex flex-col items-center justify-center'>
@@ -21,7 +21,7 @@ const Loader = (props: { withLabel?: boolean; label?: string }) => {
       </svg>
       <span className={withLabel ? '' : 'sr-only'}>{label}</span>
     </div>
-  )
-}
+  );
+};
 
-export default Loader
+export default Loader;

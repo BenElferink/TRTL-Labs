@@ -1,8 +1,8 @@
-import { XMarkIcon } from '@heroicons/react/24/solid'
-import type { PropsWithChildren } from 'react'
+import { XMarkIcon } from '@heroicons/react/24/solid';
+import type { PropsWithChildren } from 'react';
 
 const Modal = (props: PropsWithChildren<{ open: boolean; onClose: () => void }>) => {
-  const { children, open, onClose } = props
+  const { children, open, onClose } = props;
 
   return (
     <div
@@ -23,7 +23,7 @@ const Modal = (props: PropsWithChildren<{ open: boolean; onClose: () => void }>)
         </section>
       ) : null}
     </div>
-  )
-}
+  );
+};
 
-export default Modal
+export default Modal;

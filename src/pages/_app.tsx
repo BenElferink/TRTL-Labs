@@ -1,10 +1,10 @@
-import Head from 'next/head'
-import { AppProps } from 'next/app'
-import { Fragment } from 'react'
-import { Toaster } from 'react-hot-toast'
-import { MeshProvider } from '@meshsdk/react'
-import SolanaProvider from '@/contexts/SolanaProvider'
-import '@/styles/globals.css'
+import Head from 'next/head';
+import { AppProps } from 'next/app';
+import { Fragment } from 'react';
+import { Toaster } from 'react-hot-toast';
+import { MeshProvider } from '@meshsdk/react';
+import SolanaProvider from '@/contexts/SolanaProvider';
+import '@/styles/globals.css';
 
 const App = ({ Component, pageProps }: AppProps) => {
   return (
@@ -34,7 +34,7 @@ const App = ({ Component, pageProps }: AppProps) => {
         </MeshProvider>
       </main>
     </Fragment>
-  )
-}
+  );
+};
 
-export default App
+export default App;

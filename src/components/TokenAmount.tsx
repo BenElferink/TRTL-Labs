@@ -1,6 +1,6 @@
-import Image from 'next/image'
-import { useState } from 'react'
-import formatTokenAmount from '@/functions/formatTokenAmount'
+import Image from 'next/image';
+import { useState } from 'react';
+import formatTokenAmount from '@/functions/formatTokenAmount';
 
 interface TokenAmountProps {
   balance: number
@@ -10,42 +10,42 @@ interface TokenAmountProps {
 }
 
 const TokenAmount = (props: TokenAmountProps) => {
-  const { balance, decimals, selectedAmount, setSelectedAmount } = props
+  const { balance, decimals, selectedAmount, setSelectedAmount } = props;
 
-  const [amountType, setAmountType] = useState<'FIXED' | 'PERCENT'>('FIXED')
-  const [amountValue, setAmountValue] = useState(0)
+  const [amountType, setAmountType] = useState<'FIXED' | 'PERCENT'>('FIXED');
+  const [amountValue, setAmountValue] = useState(0);
 
   const handleAmountChange = (val: string) => {
-    let v = Number(val)
+    let v = Number(val);
 
     if (!isNaN(v)) {
       if (amountType === 'FIXED') {
-        v = formatTokenAmount.toChain(v, decimals)
+        v = formatTokenAmount.toChain(v, decimals);
       }
-      v = Math.floor(v)
+      v = Math.floor(v);
 
       // verify the amount is between the min and max ranges (with the help of available balance)
       if (amountType === 'FIXED') {
-        const min = 0
-        const max = balance
+        const min = 0;
+        const max = balance;
 
-        v = v < min ? min : v > max ? max : v
+        v = v < min ? min : v > max ? max : v;
 
-        setAmountValue(v)
+        setAmountValue(v);
       } else if (amountType === 'PERCENT') {
-        const min = 0
-        const max = 100
+        const min = 0;
+        const max = 100;
 
-        v = v < min ? min : v > max ? max : v
+        v = v < min ? min : v > max ? max : v;
 
-        setAmountValue(v)
+        setAmountValue(v);
 
-        v = formatTokenAmount.toChain(Math.floor(formatTokenAmount.fromChain(balance * (v / 100), decimals)), decimals)
+        v = formatTokenAmount.toChain(Math.floor(formatTokenAmount.fromChain(balance * (v / 100), decimals)), decimals);
       }
 
-      setSelectedAmount(v)
+      setSelectedAmount(v);
     }
-  }
+  };
 
   return (
     <div>
@@ -56,9 +56,9 @@ const TokenAmount = (props: TokenAmountProps) => {
       <div className='flex items-center justify-center'>
         <div
           onClick={() => {
-            setAmountType(() => 'FIXED')
-            setAmountValue(0)
-            setSelectedAmount(0)
+            setAmountType(() => 'FIXED');
+            setAmountValue(0);
+            setSelectedAmount(0);
           }}
           className={
             'group cursor-pointer my-2 p-4 border rounded-lg ' + (amountType === 'FIXED' ? 'text-white' : 'text-zinc-400 border-transparent')
@@ -72,9 +72,9 @@ const TokenAmount = (props: TokenAmountProps) => {
 
         <div
           onClick={() => {
-            setAmountType(() => 'PERCENT')
-            setAmountValue(0)
-            setSelectedAmount(0)
+            setAmountType(() => 'PERCENT');
+            setAmountValue(0);
+            setSelectedAmount(0);
           }}
           className={
             'group cursor-pointer my-2 p-4 border rounded-lg ' + (amountType === 'PERCENT' ? 'text-white' : 'text-zinc-400 border-transparent')
@@ -102,7 +102,7 @@ const TokenAmount = (props: TokenAmountProps) => {
         &nbsp;$TRTL
       </p>
     </div>
-  )
-}
+  );
+};
 
-export default TokenAmount
+export default TokenAmount;

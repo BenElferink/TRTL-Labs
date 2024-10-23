@@ -1,121 +1,121 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState } from 'react'
-import axios from 'axios'
-import toast from 'react-hot-toast'
-import { useWallet } from '@meshsdk/react'
-import { Transaction, keepRelevant } from '@meshsdk/core'
-import txConfirmation from '@/functions/txConfirmation'
-import formatTokenAmount from '@/functions/formatTokenAmount'
-import Button from '../Button'
-import Modal from '../Modal'
-import TokenAmount from '../TokenAmount'
-import type { SolAppBalanceResponse } from '@/pages/api/bridge/app-balance/solana'
-import { ADA_BRIDGE_APP_ADDRESS, TRTL_COIN } from '@/constants'
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { useWallet } from '@meshsdk/react';
+import { Transaction, keepRelevant } from '@meshsdk/core';
+import txConfirmation from '@/functions/txConfirmation';
+import formatTokenAmount from '@/functions/formatTokenAmount';
+import Button from '../Button';
+import Modal from '../Modal';
+import TokenAmount from '../TokenAmount';
+import type { SolAppBalanceResponse } from '@/pages/api/bridge/app-balance/solana';
+import { ADA_BRIDGE_APP_ADDRESS, TRTL_COIN } from '@/constants';
 
 const gatePolicies = [
   '4c1e0a4bcdd31f9e0dcdb62c8e7ce2dc69265078f41663ed8ab66816',
   '54be6339a5b264090ac59bbbddd2e370a89978efe7b8bd575f1e27e2',
   '3b0b923ec2cb5541ffb46b5a4c659c6edee0af60b32ec6061d9ea1eb',
-]
+];
 
-const gateErrorMessage = `Must hold 1 of ${gatePolicies.length} Policy IDs`
+const gateErrorMessage = `Must hold 1 of ${gatePolicies.length} Policy IDs`;
 
 const BridgeToSolanaModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const { wallet, connected } = useWallet()
-  const [isTokenGateHolder, setIsTokenGateHolder] = useState(false)
+  const { wallet, connected } = useWallet();
+  const [isTokenGateHolder, setIsTokenGateHolder] = useState(false);
 
-  const [submitting, setSubmitting] = useState(false)
+  const [submitting, setSubmitting] = useState(false);
   const [amounts, setAmounts] = useState({
     appBalance: 0,
     balance: 0,
     selected: 0,
     toGet: 0,
-  })
+  });
 
   useEffect(() => {
     axios.get<SolAppBalanceResponse>('/api/bridge/app-balance/solana').then(({ data }) => {
       setAmounts((prev) => ({
         ...prev,
         appBalance: Number(data.tokenAmount.amount),
-      }))
-    })
-  }, [])
+      }));
+    });
+  }, []);
 
   useEffect(() => {
     if (connected) {
       wallet.getPolicyIds().then((policies) => {
-        let isHolder = false
+        let isHolder = false;
 
         for (let i = 0; i < policies.length; i++) {
-          const p = policies[i]
+          const p = policies[i];
 
           if (!!gatePolicies.includes(p)) {
-            isHolder = true
-            break
+            isHolder = true;
+            break;
           }
         }
 
-        setIsTokenGateHolder(isHolder)
+        setIsTokenGateHolder(isHolder);
 
         wallet.getAssets().then((values) => {
           setAmounts((prev) => ({
             ...prev,
             balance: Number(values.find((v) => v.unit === TRTL_COIN['CARDANO']['TOKEN_ID'])?.quantity || '0'),
-          }))
-        })
-      })
+          }));
+        });
+      });
     }
-  }, [connected])
+  }, [connected]);
 
   const buildTx = async () => {
     if (!isTokenGateHolder) {
-      return toast.error(gateErrorMessage)
+      return toast.error(gateErrorMessage);
     } else {
-      return toast.error('Bridge is closed at the moment...')
+      return toast.error('Bridge is closed at the moment...');
     }
 
-    setSubmitting(true)
-    let toastId = toast.loading('Building TX...')
+    setSubmitting(true);
+    let toastId = toast.loading('Building TX...');
 
     try {
-      const tx = new Transaction({ initiator: wallet })
-      const inputs = keepRelevant(new Map([[TRTL_COIN['CARDANO']['TOKEN_ID'], amounts.selected.toString()]]), await wallet.getUtxos())
+      const tx = new Transaction({ initiator: wallet });
+      const inputs = keepRelevant(new Map([[TRTL_COIN['CARDANO']['TOKEN_ID'], amounts.selected.toString()]]), await wallet.getUtxos());
 
-      tx.setTxInputs(inputs)
+      tx.setTxInputs(inputs);
       tx.sendAssets({ address: ADA_BRIDGE_APP_ADDRESS }, [
         {
           unit: TRTL_COIN['CARDANO']['TOKEN_ID'],
           quantity: amounts.selected.toString(),
         },
-      ])
+      ]);
 
-      console.log('Building TX...')
-      const unsignedTx = await tx.build()
+      console.log('Building TX...');
+      const unsignedTx = await tx.build();
 
-      console.log('Awaiting Signature...', unsignedTx)
-      const signedTx = await wallet.signTx(unsignedTx)
+      console.log('Awaiting Signature...', unsignedTx);
+      const signedTx = await wallet.signTx(unsignedTx);
 
-      console.log('Submitting TX...', signedTx)
-      const txHash = await wallet.submitTx(signedTx)
+      console.log('Submitting TX...', signedTx);
+      const txHash = await wallet.submitTx(signedTx);
 
-      toast.dismiss(toastId)
-      toastId = toast.loading('Awaiting Network Confirmation...')
-      console.log('Awaiting Network Confirmation...', txHash)
-      await txConfirmation(txHash)
+      toast.dismiss(toastId);
+      toastId = toast.loading('Awaiting Network Confirmation...');
+      console.log('Awaiting Network Confirmation...', txHash);
+      await txConfirmation(txHash);
 
-      await axios.post('/api/bridge/cardano-to-solana/tx', { txHash })
+      await axios.post('/api/bridge/cardano-to-solana/tx', { txHash });
 
-      toast.dismiss(toastId)
-      toast.success('TX Confirmed!')
-      console.log('TX Confirmed!', txHash)
+      toast.dismiss(toastId);
+      toast.success('TX Confirmed!');
+      console.log('TX Confirmed!', txHash);
     } catch (error: any) {
-      toast.dismiss(toastId)
-      toast.error(error?.message || 'Unknown Error')
-      console.error(error)
+      toast.dismiss(toastId);
+      toast.error(error?.message || 'Unknown Error');
+      console.error(error);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
     <Modal open={isOpen} onClose={() => onClose()}>
@@ -135,7 +135,7 @@ const BridgeToSolanaModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                 ),
                 TRTL_COIN['SOLANA']['DECIMALS']
               ),
-            }))
+            }));
           }}
         />
 
@@ -174,7 +174,7 @@ const BridgeToSolanaModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: ()
         </p> */}
       </div>
     </Modal>
-  )
-}
+  );
+};
 
-export default BridgeToSolanaModal
+export default BridgeToSolanaModal;

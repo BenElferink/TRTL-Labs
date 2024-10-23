@@ -1,55 +1,55 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import blockfrost from '@/utils/blockfrost'
+import type { NextApiRequest, NextApiResponse } from 'next';
+import blockfrost from '@/utils/blockfrost';
 // import { firestore } from '@/utils/firebase'
 // import formatTokenAmount from '@/functions/formatTokenAmount'
-import { ADA_BRIDGE_APP_ADDRESS, TRTL_COIN } from '@/constants'
+import { ADA_BRIDGE_APP_ADDRESS, TRTL_COIN } from '@/constants';
 
 export const config = {
   maxDuration: 300,
   api: {
     responseLimit: false,
   },
-}
+};
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const { method, body } = req
+  const { method, body } = req;
 
   try {
     switch (method) {
       case 'POST': {
-        const { txHash } = body
-        const { inputs, outputs } = await blockfrost.txsUtxos(txHash)
-        const received: Record<string, number> = {}
+        const { txHash } = body;
+        const { inputs, outputs } = await blockfrost.txsUtxos(txHash);
+        const received: Record<string, number> = {};
 
         inputs.forEach((inp) => {
-          const from = inp.address
+          const from = inp.address;
 
           outputs.forEach((outp) => {
-            const to = outp.address
+            const to = outp.address;
 
             if (to === ADA_BRIDGE_APP_ADDRESS) {
               outp.amount.forEach(({ unit, quantity }) => {
                 if (unit === TRTL_COIN['CARDANO']['TOKEN_ID']) {
                   if (received[from]) {
-                    received[from] += +quantity
+                    received[from] += +quantity;
                   } else {
-                    received[from] = +quantity
+                    received[from] = +quantity;
                   }
                 }
-              })
+              });
             }
-          })
-        })
+          });
+        });
 
-        const objEntries = Object.entries(received)
+        const objEntries = Object.entries(received);
 
         if (!objEntries.length) {
-          return res.status(400).end('TX does not match bridge conditions')
+          return res.status(400).end('TX does not match bridge conditions');
         } else if (objEntries.length > 1) {
-          return res.status(400).end('TX has too many matching bridge conditions')
+          return res.status(400).end('TX has too many matching bridge conditions');
         }
 
-        const [[senderAddress, sentAmount]] = objEntries
+        const [[senderAddress, sentAmount]] = objEntries;
 
         // const walletsCollection = firestore.collection('turtle-syndicate-wallets')
         // const bridgeCollection = firestore.collection('trtl-bridge-to-sol')
@@ -90,21 +90,21 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         //   done: false,
         // })
 
-        const id = ''
+        const id = '';
 
-        return res.status(201).json({ id })
+        return res.status(201).json({ id });
       }
 
       default: {
-        res.setHeader('Allow', 'POST')
-        return res.status(405).end()
+        res.setHeader('Allow', 'POST');
+        return res.status(405).end();
       }
     }
   } catch (error) {
-    console.error(error)
+    console.error(error);
 
-    return res.status(500).end()
+    return res.status(500).end();
   }
-}
+};
 
-export default handler
+export default handler;

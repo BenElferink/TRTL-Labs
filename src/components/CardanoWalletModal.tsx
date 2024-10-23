@@ -1,17 +1,17 @@
-import Image from 'next/image'
-import { useEffect } from 'react'
-import toast from 'react-hot-toast'
-import { useWallet, useWalletList } from '@meshsdk/react'
-import { FaceFrownIcon } from '@heroicons/react/24/solid'
-import Modal from './Modal'
+import Image from 'next/image';
+import { useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { useWallet, useWalletList } from '@meshsdk/react';
+import { FaceFrownIcon } from '@heroicons/react/24/solid';
+import Modal from './Modal';
 
 const CardanoWalletModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const installedWallets = useWalletList()
-  const { connect, disconnect, connecting, connected, error } = useWallet()
+  const installedWallets = useWalletList();
+  const { connect, disconnect, connecting, connected, error } = useWallet();
 
   useEffect(() => {
-    if (connected) onClose()
-  }, [connected])
+    if (connected) onClose();
+  }, [connected]);
 
   return (
     <Modal open={isOpen} onClose={() => onClose()}>
@@ -42,8 +42,8 @@ const CardanoWalletModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () 
             <div className='max-w-[calc(420px+0.5rem)] mx-auto'>
               <button
                 onClick={() => {
-                  disconnect()
-                  toast.success('Disconnected')
+                  disconnect();
+                  toast.success('Disconnected');
                 }}
                 disabled={!connected || connecting}
                 className='w-full max-w-[420px] my-2 mx-auto p-4 flex items-center justify-center rounded-lg bg-zinc-700 bg-opacity-70 hover:bg-zinc-600 hover:bg-opacity-70 disabled:opacity-40'
@@ -55,7 +55,7 @@ const CardanoWalletModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () 
         </div>
       )}
     </Modal>
-  )
-}
+  );
+};
 
-export default CardanoWalletModal
+export default CardanoWalletModal;

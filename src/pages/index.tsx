@@ -1,46 +1,46 @@
-'use client'
-import type { GetServerSideProps, InferGetServerSidePropsType } from 'next'
-import Image from 'next/image'
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { firestore } from '@/utils/firebase'
-import Button from '@/components/Button'
-import ConnectWallets from '@/components/ConnectWallets'
-import BridgeToSolanaModal from '@/components/modals/BridgeToSolanaModal'
-import MintSidekickModal from '@/components/modals/MintSidekickModal'
-import type { DBWalletPayload } from '@/@types'
+'use client';
+import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { firestore } from '@/utils/firebase';
+import Button from '@/components/Button';
+import ConnectWallets from '@/components/ConnectWallets';
+import BridgeToSolanaModal from '@/components/modals/BridgeToSolanaModal';
+import MintSidekickModal from '@/components/modals/MintSidekickModal';
+import type { DBWalletPayload } from '@/@types';
 
 export const getServerSideProps: GetServerSideProps<DBWalletPayload & { docId: string }> = async ({ query }) => {
-  const id = (query.id || '') as string
+  const id = (query.id || '') as string;
 
   if (!!id) {
-    const collection = firestore.collection('turtle-syndicate-wallets')
-    const doc = await collection.doc(id).get()
+    const collection = firestore.collection('turtle-syndicate-wallets');
+    const doc = await collection.doc(id).get();
 
     if (doc.exists) {
-      return { props: { ...(doc.data() as DBWalletPayload), docId: id } }
+      return { props: { ...(doc.data() as DBWalletPayload), docId: id } };
     }
   }
 
-  return { props: { docId: id, cardano: '', solana: '' } }
-}
+  return { props: { docId: id, cardano: '', solana: '' } };
+};
 
 export type PageProps = InferGetServerSidePropsType<typeof getServerSideProps>
 
 const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PageProps) => {
-  const [submitted, setSubmitted] = useState({ id: docId, cardano: cardanoAddress, solana: solanaAddress })
-  const [ready, setReady] = useState(false)
-  const [done, setDone] = useState(!!cardanoAddress && !!solanaAddress)
+  const [submitted, setSubmitted] = useState({ id: docId, cardano: cardanoAddress, solana: solanaAddress });
+  const [ready, setReady] = useState(false);
+  const [done, setDone] = useState(!!cardanoAddress && !!solanaAddress);
 
-  useEffect(() => setReady(true), [])
+  useEffect(() => setReady(true), []);
 
   const [openModals, setOpenModals] = useState({
     solanaBridge: false,
     cardanoBridge: false,
     mintSidekick: false,
-  })
+  });
 
-  const toggleModal = (name: keyof typeof openModals) => setOpenModals((prev) => ({ ...prev, [name]: !prev[name] }))
+  const toggleModal = (name: keyof typeof openModals) => setOpenModals((prev) => ({ ...prev, [name]: !prev[name] }));
 
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-between'>
@@ -107,7 +107,7 @@ const Page = ({ docId, cardano: cardanoAddress, solana: solanaAddress }: PagePro
         </div>
       </footer>
     </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;

@@ -1,4 +1,4 @@
-import { ForwardRefExoticComponent, RefAttributes, SVGProps } from 'react'
+import { ForwardRefExoticComponent, RefAttributes, SVGProps } from 'react';
 
 interface ButtonProps {
   children?: React.ReactNode
@@ -22,7 +22,7 @@ const Button: (props: ButtonProps) => JSX.Element = (props) => {
     onClick,
     disabled,
     colors = 'bg-blue-500 border-blue-400 [box-shadow:0_10px_0_0_#1b6ff8,0_15px_0_0_#1b70f841] active:[box-shadow:0_0px_0_0_#1b6ff8,0_0px_0_0_#1b70f841]',
-  } = props
+  } = props;
 
   return (
     <button
@@ -37,13 +37,13 @@ const Button: (props: ButtonProps) => JSX.Element = (props) => {
       {Icon ? <Icon className='w-8 h-8 mr-2' /> : null}
       <span className='h-full flex flex-col items-center justify-center text-white text-lg font-[500]'>{children || label}</span>
     </button>
-  )
-}
+  );
+};
 
-export default Button
+export default Button;
 
 export const RedButton: (props: ButtonProps) => JSX.Element = (props) => {
-  const { children, ...rest } = props
+  const { children, ...rest } = props;
 
   return (
     <Button
@@ -52,5 +52,5 @@ export const RedButton: (props: ButtonProps) => JSX.Element = (props) => {
     >
       {children}
     </Button>
-  )
-}
+  );
+};
